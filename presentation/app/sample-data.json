@@ -1,0 +1,62 @@
+[
+  {
+    "id": "field-brief",
+    "title": "Alder Creek Field Brief",
+    "eyebrow": "Research brief",
+    "description": "A landscape field note with metric cards, a compact timeline, and three observation columns.",
+    "layout": "Landscape / mixed regions",
+    "tone": "moss",
+    "previewUrl": "/previews/alder-creek-field-brief-1.png",
+    "pdfUrl": "/samples/alder-creek-field-brief.pdf",
+    "markdown": "ALDER CREEK / FIELD NOTE 07 OBSERVATION WINDOW: 06:20-10:40\n\nRIPARIAN WALKTHROUGH\n\n# Alder Creek Field Brief\n\nA compact record of shade, stream clarity, and foot-traffic observations across three marked stations.\n\n#### 06:20\n\nNorth gate\n\n#### 07:35\n\nFern bend\n\n#### 09:10\n\nFootbridge\n\n#### 10:40\n\nClose\n\n## 03\n\nSTATIONS\n\n## 4.2 C\n\nAIR CHANGE\n\n## LOW\n\nSURFACE HAZE\n\n01 / SHADE\n\n### Continuous canopy\n\nCanopy cover stayed continuous along the north bank. The open bend warmed first, with a clear temperature shift after 08:30.\n\n##### NEXT CHECK\n\nWatch the exposed bend during the next noon visit.\n\n02 / WATER\n\n### Clear above bridge\n\nFlow remained clear above the footbridge. A faint surface film appeared below the crossing but dispersed within five meters.\n\n##### NEXT CHECK\n\nPhotograph the same reach after rainfall.\n\n03 / TRAFFIC\n\n### Path use stayed light\n\nNine walkers and two bicycles passed the marked route. Most visitors paused at the bridge and stayed on the packed path.\n\n##### NEXT CHECK\n\nRepeat the count on a weekend morning.\n\nFICTIONAL DEMO FIXTURE - ALL CONTENT AND LAYOUT CREATED FOR PAPERPLAIN\n\n",
+    "receipt": {
+      "engine": "OpenDataLoader PDF",
+      "engineVersion": "2.5.1",
+      "mode": "captured local run",
+      "sourceBytes": 3841,
+      "markdownCharacters": 1112,
+      "sourceSha256": "12d85460aa68",
+      "outputSha256": "f733669f4c33"
+    }
+  },
+  {
+    "id": "studio-invoice",
+    "title": "Copper & Pine Invoice",
+    "eyebrow": "Structured invoice",
+    "description": "A clean invoice with client details, ruled line items, totals, and short payment notes.",
+    "layout": "Portrait / bordered table",
+    "tone": "copper",
+    "previewUrl": "/previews/copper-and-pine-invoice-1.png",
+    "pdfUrl": "/samples/copper-and-pine-invoice.pdf",
+    "markdown": "##### COPPER &amp; PINE\n\nFictional brand and editorial studio\n\n# INVOICE\n\n#### #1048\n\nBILL TO\n\n## Juniper House Press\n\nAttn: Editorial Operations 14 Lantern Lane, Port Mason\n\n###### ISSUED\n\nAugust 20, 2026\n\n###### DUE\n\nSeptember 3, 2026\n\n###### TERMS\n\nNet 14\n\n###### DESCRIPTION QTY RATE AMOUNT\n\n|Editorial system audit<br><br>Content inventory and decision map|1|$680|$680|\n|---|---|---|---|\n|Field guide layout<br><br>Twelve-page production-ready document|1|$940|$940|\n|Reusable page templates<br><br>Cover, section, table, and callout|4|$125|$500|\n|Delivery handoff<br><br>Source package and annotated walkthrough|1|$180|$180|\n\n\nSubtotal $2,300\n\nTax $0\n\nTotal due $2,300\n\n### Payment notes\n\nPlease include invoice 1048 with payment. This fixture contains no real account, client, or payment details.\n\nPROJECT STATUS\n\n## Delivered\n\nFinal package accepted\n\nFICTIONAL DEMO FIXTURE - ALL CONTENT AND LAYOUT CREATED FOR PAPERPLAIN\n\n",
+    "receipt": {
+      "engine": "OpenDataLoader PDF",
+      "engineVersion": "2.5.1",
+      "mode": "captured local run",
+      "sourceBytes": 3361,
+      "markdownCharacters": 930,
+      "sourceSha256": "dc8144def31b",
+      "outputSha256": "5faf10664d79"
+    }
+  },
+  {
+    "id": "block-bulletin",
+    "title": "Juniper Block Bulletin",
+    "eyebrow": "Community bulletin",
+    "description": "A two-column neighborhood bulletin with a masthead, short stories, a schedule, and a callout.",
+    "layout": "Portrait / two columns",
+    "tone": "sun",
+    "previewUrl": "/previews/juniper-block-bulletin-1.png",
+    "pdfUrl": "/samples/juniper-block-bulletin.pdf",
+    "markdown": "ISSUE 08 / LATE SUMMER FICTIONAL NEIGHBORHOOD EDITION\n\nJuniper Block Bulletin\n\nSmall news, useful dates, and one good reason to step outside.\n\nON THE CORNER\n\n# The library cart returns\n\nAfter a month in the repair shop, the little blue book cart rolls back to the plaza this Saturday. Volunteers added a weatherproof lid, brighter wheels, and a shelf reserved for local zines.\n\nBring one book or simply browse. The cart runs on trust: take what you will read, leave what a neighbor might love.\n\nTHIS WEEK\n\n#### THU 20 Porch concert\n\n7:00 PM / Maple steps\n\n#### SAT 22 Book cart return\n\n10:00 AM / East plaza\n\n##### A SMALL REQUEST\n\nPlease keep donations to two clean books per household so the cart can close safely.\n\nBACKYARD NOTE\n\n## Tomatoes after the heat\n\nWater deeply in the morning, leave damaged leaves until the hottest week passes, and harvest split fruit early. The seed swap table has paper bags by the sign-in sheet.\n\n#### SUN 23 Seed swap\n\n2:00 PM / Garden gate\n\nONE GOOD REASON\n\n### The evenings are finally cool enough for the long way home.\n\n###### NOTICE BOARD\n\nLost: one red garden glove near Juniper and Third.\n\nFound: brass key on a blue cord at the plaza bench.\n\nNeeded: two folding tables for the seed swap.\n\nFICTIONAL DEMO FIXTURE - ALL CONTENT AND LAYOUT CREATED FOR PAPERPLAIN\n\n",
+    "receipt": {
+      "engine": "OpenDataLoader PDF",
+      "engineVersion": "2.5.1",
+      "mode": "captured local run",
+      "sourceBytes": 4255,
+      "markdownCharacters": 1304,
+      "sourceSha256": "1ac9c72f8f64",
+      "outputSha256": "844178475d70"
+    }
+  }
+]

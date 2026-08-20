@@ -71,10 +71,25 @@ PDF through the actual local OpenDataLoader engine.
 - `Start Paperplain.command` is a localhost-only macOS convenience launcher.
 - `tests/` covers the public surface, rejected sample IDs, launcher boundary,
   and real conversions.
+- `presentation/` is an isolated, static Sites-compatible portfolio surface
+  built from the same fictional fixtures and captured conversion output.
 
 OpenDataLoader PDF 2.5.1 is used in ordinary local mode. Its Node wrapper starts
 a Java process, so this backend needs a Java-capable host. This repository does
 not pretend that browser-only or edge hosting can perform the live conversion.
+
+## Static Sites presentation candidate
+
+`presentation/` contains a review-oriented website that lets a visitor browse
+the three fixtures and inspect Markdown captured from verified local conversion
+runs. It is not the live converter: it has no upload control, conversion route,
+Java process, visitor document handling, persistence, authentication, secret,
+external connector, or private-network link.
+
+The presentation copies the canonical fixture bytes into its build surface and
+tests those copies against the repository originals. A saved Sites version is a
+review artifact, not a deployment. See
+[`presentation/README.md`](presentation/README.md) for its exact boundary.
 
 ## Regenerate the fictional corpus
 

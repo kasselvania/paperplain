@@ -18,6 +18,18 @@ Paperplain's current boundary is deliberately local and fixed:
 manifest, and opens `http://127.0.0.1:4173` in the default browser. It does not
 change firewall, router, sharing, or network settings.
 
+## Static presentation candidate
+
+The separate `presentation/` surface is a static portfolio review candidate. It
+contains copies of the three canonical fictional PDFs, their pre-rendered page
+images, and Markdown plus receipt data captured from verified local runs. Its
+sample selector and clipboard action operate only on that bundled content.
+
+The presentation has no upload, visitor document path, converter process, Java
+runtime, conversion API, account, authentication, database, storage binding,
+secret, external connector, proxy, tunnel, or private-LAN connection. Saving a
+Sites version does not deploy it or create a live endpoint.
+
 ## Deferred phase 1: isolated LAN-only proof
 
 A future first networking experiment would run the converter in an isolated
