@@ -113,8 +113,10 @@ The repository names these variables but commits no values:
 
 - `PAPERPLAIN_ALLOWED_ORIGIN` — the exact HTTPS origin of the private Sites
   presentation, with no path or trailing slash.
-- `PAPERPLAIN_REQUEST_SECRET` — a random secret of at least 32 bytes, stored as
-  a Render secret and shared only with a future trusted server-side signer.
+- `PAPERPLAIN_REQUEST_SECRET` — exactly 64 lowercase hexadecimal characters
+  encoding 32 random bytes, stored as a Render secret and shared verbatim only
+  with a future trusted server-side signer. Do not add quotes, spaces, or line
+  breaks.
 
 `PORT` is supplied by Render. The image selects hosted mode itself. The service
 refuses to start if either required value is missing or malformed.
@@ -139,6 +141,9 @@ POST
 <exact allowed origin>
 <SHA-256 of the empty request body>
 ```
+
+The signing helper validates that exact 64-character lowercase hexadecimal
+format, decodes it to the original 32-byte key, and then computes the HMAC.
 
 The backend accepts a timestamp for 60 seconds, allows at most 10 seconds of
 future clock skew, and remembers accepted nonces in memory for the window. A
@@ -193,9 +198,17 @@ Nothing in this section has been performed by the repository preparation.
    `paperplain-converter`, with auto-deploy disabled, `/healthz` as its health
    check, and no disk, database, custom domain, or additional service.
 4. Enter `PAPERPLAIN_ALLOWED_ORIGIN` as the exact private Sites origin.
-5. Generate a new random secret of at least 32 bytes, retain it in an appropriate
-   secret manager, and enter it as `PAPERPLAIN_REQUEST_SECRET`. Do not put it in
-   GitHub or the Sites client bundle.
+5. On this Mac, generate 32 random bytes as exactly 64 lowercase hexadecimal
+   characters and copy them without a trailing line break:
+
+   ```bash
+   openssl rand -hex 32 | tr -d '\n' | pbcopy
+   ```
+
+   Paste the clipboard contents verbatim into `PAPERPLAIN_REQUEST_SECRET` and
+   retain the same value in an appropriate secret manager for a future trusted
+   signer. The pasted value must match `^[0-9a-f]{64}$`: no quotes, spaces, or
+   line breaks. Do not put it in GitHub or the Sites client bundle.
 6. Choose the desired region, review the public `onrender.com` exposure, then
    explicitly apply the Blueprint when ready. Applying it creates and deploys a
    live public backend.

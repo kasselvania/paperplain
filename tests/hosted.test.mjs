@@ -1,13 +1,20 @@
 import assert from "node:assert/strict";
+import { createHmac } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { test } from "node:test";
 
 import { ConversionTimeoutError } from "../lib/converter.mjs";
-import { AUTH_HEADERS, signHostedRequest } from "../lib/request-auth.mjs";
+import {
+  AUTH_HEADERS,
+  canonicalHostedRequest,
+  signHostedRequest,
+  validateRequestSecret,
+} from "../lib/request-auth.mjs";
 import { createDemoServer, resolveRuntimeConfig } from "../server.mjs";
 
 const ALLOWED_ORIGIN = "https://paperplain.example";
-const REQUEST_SECRET = "paperplain-test-secret-32-bytes-minimum";
+const REQUEST_SECRET =
+  "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 const NOW_SECONDS = 1_800_000_000;
 const NOW_MS = NOW_SECONDS * 1_000;
 
@@ -82,6 +89,41 @@ async function startHostedServer(t, overrides = {}) {
   const address = server.address();
   return `http://127.0.0.1:${address.port}`;
 }
+
+test("the documented Render secret is exactly 32 hex-decoded bytes", () => {
+  assert.equal(REQUEST_SECRET.length, 64);
+  assert.match(REQUEST_SECRET, /^[0-9a-f]{64}$/);
+  assert.equal(validateRequestSecret(REQUEST_SECRET), REQUEST_SECRET);
+
+  for (const invalid of [
+    REQUEST_SECRET.slice(1),
+    REQUEST_SECRET.toUpperCase(),
+    `${REQUEST_SECRET}\n`,
+    ` ${REQUEST_SECRET}`,
+  ]) {
+    assert.throws(
+      () => validateRequestSecret(invalid),
+      /exactly 64 lowercase hexadecimal characters/,
+    );
+  }
+
+  const request = {
+    secret: REQUEST_SECRET,
+    timestamp: NOW_SECONDS,
+    nonce: nonce(1),
+    method: "POST",
+    pathname: "/api/convert/field-brief",
+    origin: ALLOWED_ORIGIN,
+  };
+  const expected = createHmac(
+    "sha256",
+    Buffer.from(REQUEST_SECRET, "hex"),
+  )
+    .update(canonicalHostedRequest(request))
+    .digest("hex");
+
+  assert.equal(signHostedRequest(request), `v1=${expected}`);
+});
 
 test("runtime configuration is localhost by default and fail-closed in hosted mode", () => {
   assert.deepEqual(resolveRuntimeConfig({}), {
@@ -333,6 +375,7 @@ test("the Render blueprint is manual, secret-free, and uses the bounded image", 
   assert.equal(
     envExample,
     "# Required only by the hosted container. Leave secrets out of source control.\n" +
+      "# Secret format: exactly 64 lowercase hex characters; no whitespace.\n" +
       "PAPERPLAIN_ALLOWED_ORIGIN=\n" +
       "PAPERPLAIN_REQUEST_SECRET=\n",
   );

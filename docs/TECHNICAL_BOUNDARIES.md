@@ -54,7 +54,10 @@ The hosted route:
 - returns generic errors without engine diagnostics or environment details.
 
 The origin header is not treated as authentication. The signature secret is the
-authorization boundary and must remain in server-side secret stores.
+authorization boundary and must remain in server-side secret stores. Its
+environment representation is exactly 64 lowercase hexadecimal characters;
+the signer and verifier decode that representation to the same 32-byte HMAC
+key.
 
 ## Static-browser gap
 
