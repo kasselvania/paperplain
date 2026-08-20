@@ -147,7 +147,7 @@ test("the built Sites route denies unauthenticated, cross-origin, and unconfigur
   });
 });
 
-test("the Sites signer interoperates with the Render verifier", async () => {
+test("the Sites signer accepts Cloudflare's empty body and interoperates with Render", async () => {
   const renderOrigin = "https://paperplain-converter.onrender.com";
   const now = 1_800_000_000_000;
   const markdown = "# Fresh field brief";
@@ -203,9 +203,11 @@ test("the Sites signer interoperates with the Render verifier", async () => {
       method: "POST",
       headers: {
         Origin: SITE_ORIGIN,
+        "Content-Length": "0",
         "oai-authenticated-user-id": "owner-test-user",
         "oai-authenticated-user-email": "owner@example.test",
       },
+      body: "",
     }),
     {
       PAPERPLAIN_RENDER_ORIGIN: renderOrigin,
@@ -259,7 +261,7 @@ test("invalid samples and request bodies never reach Render", async () => {
   const withBody = await handlePrivateConversionRequest(
     new Request(SITE_ORIGIN + "/api/convert/field-brief", {
       method: "POST",
-      headers,
+      headers: { ...headers, "Content-Length": "0" },
       body: "not accepted",
     }),
     env,

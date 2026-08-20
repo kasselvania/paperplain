@@ -36,6 +36,21 @@ function hasAuthenticatedSitesUser(request) {
   );
 }
 
+async function hasRequestPayload(request) {
+  if (request.body === null) return false;
+
+  const reader = request.body.getReader();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) return false;
+      if ((value?.byteLength ?? 0) > 0) return true;
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+}
+
 function normalizeRenderOrigin(value) {
   if (typeof value !== "string") return null;
 
@@ -207,7 +222,7 @@ export async function handlePrivateConversionRequest(
     return json({ error: "Sample not found." }, 404);
   }
 
-  if (request.body !== null) {
+  if (await hasRequestPayload(request)) {
     return json({ error: "Request body refused." }, 400);
   }
 
