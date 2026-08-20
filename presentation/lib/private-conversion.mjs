@@ -29,6 +29,10 @@ function json(body, status, extraHeaders = {}) {
   });
 }
 
+function isRedirectStatus(status) {
+  return status >= 300 && status <= 399;
+}
+
 function hasAuthenticatedSitesUser(request) {
   return Boolean(
     request.headers.get("oai-authenticated-user-id") &&
@@ -244,7 +248,7 @@ export async function handlePrivateConversionRequest(
       {
         method: "GET",
         headers: { Accept: "application/json" },
-        redirect: "error",
+        redirect: "manual",
       },
       WAKE_TIMEOUT_MS,
     );
@@ -278,11 +282,14 @@ export async function handlePrivateConversionRequest(
           [AUTH_HEADERS.nonce]: nonce,
           [AUTH_HEADERS.signature]: AUTH_VERSION + "=" + digest,
         },
-        redirect: "error",
+        redirect: "manual",
       },
       CONVERSION_TIMEOUT_MS,
     );
 
+    if (isRedirectStatus(upstream.status)) {
+      return json({ error: "Private conversion is unavailable." }, 502);
+    }
     if (upstream.status === 429) {
       return json({ error: "Private converter is busy." }, 429);
     }

@@ -160,11 +160,13 @@ test("the Sites signer accepts Cloudflare's empty body and interoperates with Re
 
     if (url.pathname === "/healthz") {
       assert.equal(request.method, "GET");
+      assert.equal(request.redirect, "manual");
       return new Response(null, { status: 204 });
     }
 
     assert.equal(url.pathname, "/api/convert/field-brief");
     assert.equal(request.method, "POST");
+    assert.equal(request.redirect, "manual");
     assert.equal(request.headers.get("origin"), SITE_ORIGIN);
     assert.equal(await request.text(), "");
 
@@ -228,6 +230,34 @@ test("the Sites signer accepts Cloudflare's empty body and interoperates with Re
     outbound.map((request) => new URL(request.url).pathname),
     ["/healthz", "/api/convert/field-brief"],
   );
+});
+
+test("Sites refuses Render redirects without following them", async () => {
+  let outboundCalls = 0;
+  const response = await handlePrivateConversionRequest(
+    new Request(SITE_ORIGIN + "/api/convert/field-brief", {
+      method: "POST",
+      headers: {
+        Origin: SITE_ORIGIN,
+        "oai-authenticated-user-id": "owner-test-user",
+        "oai-authenticated-user-email": "owner@example.test",
+      },
+    }),
+    {
+      PAPERPLAIN_RENDER_ORIGIN: "https://paperplain-converter.onrender.com",
+      PAPERPLAIN_REQUEST_SECRET: TEST_ONLY_SECRET,
+    },
+    {
+      fetch: async (input, init) => {
+        outboundCalls += 1;
+        assert.equal(new Request(input, init).redirect, "manual");
+        return Response.redirect("https://redirected.example", 302);
+      },
+    },
+  );
+
+  assert.equal(response.status, 502);
+  assert.equal(outboundCalls, 1);
 });
 
 test("invalid samples and request bodies never reach Render", async () => {
