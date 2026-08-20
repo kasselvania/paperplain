@@ -4,7 +4,7 @@ import "./globals.css";
 
 const title = "Paperplain — Verified PDF-to-Markdown samples";
 const description =
-  "An owner-only Paperplain integration candidate with three fixed fictional PDFs, captured baselines, and a server-signed private conversion path.";
+  "An owner-only Paperplain demo that converts one of three fictional PDFs through a server-signed private route and reveals Markdown only after a successful run.";
 
 export const metadata: Metadata = {
   title,

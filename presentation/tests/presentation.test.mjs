@@ -55,38 +55,39 @@ async function collectTextAssets(directory) {
   return chunks.join("\n");
 }
 
-test("server-renders the Paperplain private integration candidate", async () => {
+test("server-renders an empty Paperplain workflow with no implied result", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
   assert.match(html, /<title>Paperplain — Verified PDF-to-Markdown samples<\/title>/i);
-  assert.match(html, /Private integration candidate/);
-  assert.match(html, /Known documents in\./);
-  assert.match(html, /Explore a verified sample/);
-  assert.match(html, /Run private conversion/);
-  assert.match(html, /browser never receives the signing secret/i);
+  assert.match(html, /Owner-only integration/);
+  assert.match(html, /Choose the source\./);
+  assert.match(html, /Start with a sample/);
+  assert.match(html, /Choose a fixture to begin\./);
+  assert.match(html, /No PDF is loaded and no Markdown exists/i);
   assert.match(html, /No uploads or visitor documents/);
-  assert.doesNotMatch(html, /codex-preview|type=["']file["']|Convert now/i);
+  assert.doesNotMatch(
+    html,
+    /codex-preview|type=["']file["']|Convert now|SERVER RUN RECEIPT|Live conversion complete|ALDER CREEK \/ FIELD NOTE/i,
+  );
 });
 
-test("contains all three captured outputs and verification receipts", async () => {
-  const captures = JSON.parse(
+test("contains three metadata-only fixtures and no client-side conversion result", async () => {
+  const samples = JSON.parse(
     await readFile(new URL("../app/sample-data.json", import.meta.url), "utf8"),
   );
 
-  assert.equal(captures.length, 3);
+  assert.equal(samples.length, 3);
   assert.deepEqual(
-    captures.map((sample) => sample.id),
+    samples.map((sample) => sample.id),
     ["field-brief", "studio-invoice", "block-bulletin"],
   );
-  assert.ok(captures.every((sample) => sample.receipt.engine === "OpenDataLoader PDF"));
-  assert.ok(captures.every((sample) => sample.receipt.engineVersion === "2.5.1"));
-  assert.ok(captures.every((sample) => sample.receipt.mode === "captured local run"));
-  assert.ok(captures.every((sample) => sample.markdown.length > 800));
-  assert.ok(captures.every((sample) => /^[a-f0-9]{12}$/.test(sample.receipt.sourceSha256)));
-  assert.ok(captures.every((sample) => /^[a-f0-9]{12}$/.test(sample.receipt.outputSha256)));
+  assert.ok(samples.every((sample) => !Object.hasOwn(sample, "markdown")));
+  assert.ok(samples.every((sample) => !Object.hasOwn(sample, "receipt")));
+  assert.ok(samples.every((sample) => sample.previewUrl.startsWith("/previews/")));
+  assert.ok(samples.every((sample) => sample.pdfUrl.startsWith("/samples/")));
 });
 
 test("presentation fixtures are byte-identical to the canonical corpus", async () => {
@@ -312,6 +313,10 @@ test("client assets contain the same-origin action but no server configuration",
     /PAPERPLAIN_REQUEST_SECRET|PAPERPLAIN_RENDER_ORIGIN|onrender[.]com/,
   );
   assert.doesNotMatch(clientAssets, new RegExp(TEST_ONLY_SECRET));
+  assert.doesNotMatch(
+    clientAssets,
+    /ALDER CREEK \/ FIELD NOTE|Subtotal \$2,300|The library cart returns/,
+  );
 });
 
 test("source keeps the private route fixed-corpus, server-only, and storage-free", async () => {

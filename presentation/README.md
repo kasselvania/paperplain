@@ -7,9 +7,9 @@ Render backend candidate in the repository root.
 The presentation includes only:
 
 - copies of the three generated, fictional sample PDFs and their previews;
-- Markdown captured from verified local OpenDataLoader PDF 2.5.1 runs;
-- receipt data derived from those runs;
-- client-side sample selection and clipboard interaction; and
+- client-side sample selection with no default-loaded fixture or result;
+- Markdown and receipt data returned only by a successful live run;
+- a clipboard action available only for that returned Markdown; and
 - one server-side route for a fresh conversion of the selected fixed sample.
 
 The route accepts no upload, body, visitor document, arbitrary path, or remote
@@ -24,9 +24,9 @@ malformed, the route returns a generic `503` without contacting Render. Sites
 still contains no converter process, Java runtime, app-owned authentication,
 persistence, database, storage binding, tunnel, or private-network link.
 
-The currently deployed owner-only Sites version remains the earlier static
-presentation. This source candidate has not been configured, saved as a Sites
-version, or deployed.
+Source and build success do not prove that the separately configured Sites and
+Render secrets match. The end-to-end claim remains open until an owner session
+completes a conversion at the deployed boundary.
 
 ## Manual configuration boundary
 
@@ -49,10 +49,11 @@ npm test
 ```
 
 The build emits the Sites-compatible worker and static assets under `dist/`.
-The tests render the built worker, exercise authentication and input denials,
-verify HMAC interoperability with the Render verifier, scan client assets for
-server configuration, and confirm the published PDF and preview copies remain
-byte-identical to the canonical fixtures.
+The tests render the built worker with an empty initial workspace, prove that no
+captured conversion payload ships in client assets, exercise authentication and
+input denials, verify HMAC interoperability with the Render verifier, scan
+client assets for server configuration, and confirm the published PDF and
+preview copies remain byte-identical to the canonical fixtures.
 
 No software license has been selected for Paperplain. See the repository-root
 `THIRD_PARTY_NOTICES.md` for OpenDataLoader PDF attribution.

@@ -18,14 +18,14 @@ with, sponsored by, or endorsed by OpenDataLoader PDF or its maintainers. See
 ## What is in this repository
 
 - A localhost demo that previews and converts the three fixed samples.
-- An owner-only Sites presentation with captured, verified output plus an
-  undeployed server-route candidate for fresh fixed-sample runs.
+- An owner-only Sites interface that begins empty and reveals Markdown only
+  after a successful fixed-sample server conversion.
 - A Docker and Render Blueprint candidate for a separately deployed,
   authenticated fixed-sample conversion API.
 
 Repository source alone does not prove that either hosted runtime is deployed,
-configured, connected, or healthy. The current live Sites version remains the
-earlier static presentation until a later deployment is explicitly authorized.
+configured, connected, or healthy. Hosted state must be verified at the real
+Sites-to-Render request boundary.
 
 ## Run locally on macOS
 
@@ -89,13 +89,13 @@ same packaged JAR directly so it can enforce a hard process timeout.
 
 ## Sites presentation and private integration candidate
 
-`presentation/` lets a visitor browse the three fixtures and inspect Markdown
-captured from verified local conversions. The current owner-only deployment
-remains the earlier static presentation. This candidate branch adds an
-undeployed same-origin server route that can request a fresh conversion for one
-of the same three samples after Sites receives its server-only configuration.
-It adds no upload control, Java process, visitor document handling, persistence,
-database, storage, or private-network link.
+`presentation/` begins with no selected document and no conversion result. A
+visitor chooses one of the three fixtures, inspects that source, and explicitly
+requests a fresh conversion. Only a successful same-origin server response
+reveals Markdown, a run receipt, and the copy action. A failed request exposes
+no captured or fallback result. The Sites surface adds no upload control, Java
+process, visitor document handling, persistence, database, storage, or
+private-network link.
 
 ## Render deployment candidate
 

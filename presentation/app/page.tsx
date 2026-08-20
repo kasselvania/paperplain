@@ -21,73 +21,52 @@ type LiveConversion = {
     outputSha256: string;
   };
 };
+
 type RunState = "idle" | "running" | "success" | "error";
 
-const valueSteps = [
-  {
-    number: "01",
-    title: "Curate the source",
-    copy: "Start with a small, known set of documents whose rights and purpose are clear.",
-  },
-  {
-    number: "02",
-    title: "Expose the structure",
-    copy: "Turn headings, tables, labels, and reading order into Markdown that can be inspected line by line.",
-  },
-  {
-    number: "03",
-    title: "Bring useful context",
-    copy: "Use the resulting text as transparent context for AI and coding assistants instead of an opaque attachment.",
-  },
-];
+const idleMessage =
+  "The selected fixture stays unchanged until you ask the server to convert it.";
 
 export default function Home() {
-  const [selectedId, setSelectedId] = useState(sampleData[0].id);
-  const [copyState, setCopyState] = useState("Copy captured Markdown");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [liveResult, setLiveResult] = useState<LiveConversion | null>(null);
   const [runState, setRunState] = useState<RunState>("idle");
-  const [runMessage, setRunMessage] = useState(
-    "Runs only for the selected fixed sample through the private Sites route.",
-  );
-  const selected = sampleData.find((sample) => sample.id === selectedId) ?? sampleData[0];
-  const hasLiveResult = liveResult?.sampleId === selected.id;
-  const displayedMarkdown = hasLiveResult ? liveResult.markdown : selected.markdown;
-  const displayedReceipt = hasLiveResult ? liveResult.run : selected.receipt;
+  const [runMessage, setRunMessage] = useState(idleMessage);
+  const [copyState, setCopyState] = useState("Copy Markdown");
 
-  async function copyMarkdown() {
-    try {
-      await navigator.clipboard.writeText(displayedMarkdown);
-      setCopyState("Copied to clipboard");
-    } catch {
-      setCopyState("Copy unavailable");
-    }
-
-    window.setTimeout(
-      () =>
-        setCopyState(
-          hasLiveResult ? "Copy fresh Markdown" : "Copy captured Markdown",
-        ),
-      1800,
-    );
-  }
+  const selected = sampleData.find((sample) => sample.id === selectedId) ?? null;
+  const workflowStep = liveResult ? 3 : selected ? 2 : 1;
 
   function chooseSample(id: string) {
     setSelectedId(id);
     setLiveResult(null);
     setRunState("idle");
-    setRunMessage(
-      "Runs only for the selected fixed sample through the private Sites route.",
-    );
-    setCopyState("Copy captured Markdown");
+    setRunMessage(idleMessage);
+    setCopyState("Copy Markdown");
+  }
+
+  async function copyMarkdown() {
+    if (!liveResult) return;
+
+    try {
+      await navigator.clipboard.writeText(liveResult.markdown);
+      setCopyState("Copied to clipboard");
+    } catch {
+      setCopyState("Copy unavailable");
+    }
+
+    window.setTimeout(() => setCopyState("Copy Markdown"), 1800);
   }
 
   async function runPrivateConversion() {
+    if (!selected) return;
+
     const sampleId = selected.id;
     setLiveResult(null);
-    setCopyState("Copy captured Markdown");
+    setCopyState("Copy Markdown");
     setRunState("running");
     setRunMessage(
-      "Waking the bounded converter, then issuing a short-lived signed request…",
+      "A real server request is running. The managed converter may be waking from idle.",
     );
 
     try {
@@ -112,14 +91,14 @@ export default function Home() {
       ) {
         const message =
           response.status === 401
-            ? "An authenticated private Sites session is required."
+            ? "The owner-authenticated Sites session was not accepted."
             : response.status === 403
-              ? "The private request was refused from this page."
+              ? "The server refused this page origin."
               : response.status === 429
-                ? "The converter is busy. Try again shortly."
+                ? "The converter is busy. Try this sample again shortly."
                 : response.status === 503
-                  ? "The private Sites route is not configured yet."
-                  : "The private conversion is temporarily unavailable.";
+                  ? "The private server route is not configured."
+                  : "The converter did not return a result. Nothing has been substituted.";
         setRunState("error");
         setRunMessage(message);
         return;
@@ -127,18 +106,17 @@ export default function Home() {
 
       setLiveResult(payload);
       setRunState("success");
-      setRunMessage(
-        "Fresh Markdown returned through the owner-only server route.",
-      );
-      setCopyState("Copy fresh Markdown");
+      setRunMessage("Fresh Markdown returned from the real converter.");
     } catch {
       setRunState("error");
-      setRunMessage("The private conversion is temporarily unavailable.");
+      setRunMessage(
+        "The converter did not return a result. Nothing has been substituted.",
+      );
     }
   }
 
   return (
-    <div className="site-shell" data-tone={selected.tone} id="top">
+    <div className="site-shell" data-tone={selected?.tone ?? "moss"} id="top">
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="Paperplain home">
           <span className="wordmark-mark" aria-hidden="true">
@@ -148,77 +126,72 @@ export default function Home() {
         </a>
         <div className="candidate-status">
           <span className="status-dot" aria-hidden="true" />
-          Private integration candidate
+          Owner-only integration
         </div>
       </header>
 
       <main>
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <p className="eyebrow">PDF → MARKDOWN / OWNER-ONLY INTEGRATION</p>
+            <p className="eyebrow">PDF → MARKDOWN / FIXED SAMPLE DEMO</p>
             <h1 id="hero-title">
-              Known documents in.
-              <span>Clear context out.</span>
+              Choose the source.
+              <span>Reveal the structure.</span>
             </h1>
             <p className="hero-intro">
-              Paperplain turns a curated PDF set into structured, inspectable
-              Markdown while keeping its signing key and converter call on the
-              server.
+              Select one fictional PDF, run the real server-side converter, then
+              inspect and copy only the Markdown that comes back from that run.
             </p>
             <a className="primary-link" href="#sample-explorer">
-              Explore a verified sample
+              Start with a sample
               <span aria-hidden="true">↓</span>
             </a>
           </div>
 
-          <aside className="hero-proof" aria-label="Presentation boundary">
-            <div className="proof-index" aria-hidden="true">
-              03
-            </div>
-            <p className="proof-label">FIXED FICTIONAL DOCUMENTS</p>
-            <p>
-              Three PDFs. Three layouts. A captured baseline plus one bounded
-              private route for a fresh conversion.
+          <aside className="hero-proof" aria-label="Demo contract">
+            <p className="proof-label">THE WHOLE DEMO</p>
+            <ol className="hero-flow">
+              <li data-active={workflowStep === 1}>
+                <span>01</span>
+                <strong>Choose</strong>
+                <p>Pick one known fixture.</p>
+              </li>
+              <li data-active={workflowStep === 2}>
+                <span>02</span>
+                <strong>Convert</strong>
+                <p>Run one bounded server request.</p>
+              </li>
+              <li data-active={workflowStep === 3}>
+                <span>03</span>
+                <strong>Use</strong>
+                <p>Inspect the receipt and copy Markdown.</p>
+              </li>
+            </ol>
+            <p className="proof-boundary">
+              No result is present before a successful conversion.
             </p>
-            <div className="boundary-stamp">
-              <span>SERVER-SIDE PATH</span>
-              <strong>OWNER-ONLY</strong>
-            </div>
           </aside>
         </section>
 
-        <section className="value-path" aria-labelledby="value-title">
-          <div className="section-heading compact">
-            <p className="eyebrow">WHY THIS SHAPE WORKS</p>
-            <h2 id="value-title">From document to usable context.</h2>
-          </div>
-          <ol className="value-steps">
-            {valueSteps.map((step) => (
-              <li key={step.number}>
-                <span className="step-number">{step.number}</span>
-                <h3>{step.title}</h3>
-                <p>{step.copy}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className="explorer" id="sample-explorer" aria-labelledby="explorer-title">
+        <section
+          className="explorer"
+          id="sample-explorer"
+          aria-labelledby="explorer-title"
+        >
           <div className="section-heading explorer-heading">
             <div>
-              <p className="eyebrow">FIXED SAMPLE EXPLORER</p>
-              <h2 id="explorer-title">Inspect the baseline, then request a fresh run.</h2>
+              <p className="eyebrow">01 / CHOOSE A SOURCE</p>
+              <h2 id="explorer-title">Three fixtures. No preloaded answer.</h2>
             </div>
             <p className="section-note">
-              Browsing stays static. The explicit private action sends only the
-              selected allowlisted sample ID through the owner-authenticated Sites
-              route.
+              Each card represents one allowlisted fictional PDF. Selecting a card
+              reveals only its source preview and the action needed to convert it.
             </p>
           </div>
 
-          <div className="sample-picker" aria-label="Verified samples">
+          <div className="sample-picker" aria-label="Fictional sample PDFs">
             {sampleData.map((sample, index) => {
-              const isSelected = sample.id === selected.id;
+              const isSelected = sample.id === selected?.id;
               return (
                 <button
                   className="sample-button"
@@ -226,7 +199,7 @@ export default function Home() {
                   key={sample.id}
                   type="button"
                   aria-pressed={isSelected}
-                  aria-controls="sample-output"
+                  aria-controls="conversion-workspace"
                   disabled={runState === "running"}
                   onClick={() => chooseSample(sample.id)}
                 >
@@ -246,148 +219,178 @@ export default function Home() {
             })}
           </div>
 
-          <div className="sample-workspace" id="sample-output">
-            <article className="source-panel">
-              <header className="panel-header">
-                <div>
-                  <span className="panel-number">01</span>
-                  <p>Fictional source PDF</p>
-                </div>
-                <span className="panel-meta">{selected.layout}</span>
-              </header>
-              <div className="source-frame">
-                <img
-                  src={selected.previewUrl}
-                  alt={`Rendered first page of ${selected.title}`}
-                />
-              </div>
-              <div className="source-caption">
-                <div>
-                  <p>{selected.eyebrow}</p>
-                  <h3>{selected.title}</h3>
-                  <span>{selected.description}</span>
-                </div>
-                <a href={selected.pdfUrl} target="_blank" rel="noreferrer">
-                  Open fixture PDF
-                  <span aria-hidden="true">↗</span>
-                </a>
-              </div>
-            </article>
-
-            <article className="markdown-panel">
-              <header className="panel-header markdown-header">
-                <div>
-                  <span className="panel-number">02</span>
-                  <p>{hasLiveResult ? "Fresh Markdown" : "Captured Markdown"}</p>
-                </div>
-                <button type="button" onClick={copyMarkdown}>
-                  {copyState}
-                </button>
-              </header>
-              <div className="private-run-bar" data-state={runState}>
-                <div>
-                  <span>OWNER-ONLY SERVER ACTION</span>
-                  <p role="status" aria-live="polite">
-                    {runMessage}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  disabled={runState === "running"}
-                  onClick={runPrivateConversion}
-                >
-                  {runState === "running"
-                    ? "Conversion running…"
-                    : "Run private conversion"}
-                </button>
-              </div>
-              <div className="markdown-note">
-                <span className="verified-mark" aria-hidden="true">
-                  ✓
+          {!selected ? (
+            <div className="workspace-empty" id="conversion-workspace">
+              <span aria-hidden="true">01</span>
+              <div>
+                <p>WAITING FOR A SOURCE</p>
+                <h3>Choose a fixture to begin.</h3>
+                <span>
+                  No PDF is loaded and no Markdown exists in this workspace yet.
                 </span>
-                {hasLiveResult
-                  ? "Returned from a fresh, signed OpenDataLoader PDF run."
-                  : "Displayed verbatim from a verified local OpenDataLoader PDF 2.5.1 run."}
               </div>
-              <pre className="markdown-output">
-                <code>{displayedMarkdown}</code>
-              </pre>
-              <div
-                className="run-receipt"
-                aria-label={
-                  hasLiveResult ? "Fresh private run receipt" : "Static capture receipt"
-                }
-              >
-                <div className="receipt-heading">
-                  <p>
-                    {hasLiveResult
-                      ? "PRIVATE SERVER RUN RECEIPT"
-                      : "STATIC CAPTURE RECEIPT"}
-                  </p>
-                  <span>
-                    {hasLiveResult
-                      ? liveResult.run.elapsedMs.toLocaleString() + " ms"
-                      : "Not a live run"}
-                  </span>
+            </div>
+          ) : (
+            <div className="sample-workspace" id="conversion-workspace">
+              <article className="source-panel">
+                <header className="panel-header">
+                  <div>
+                    <span className="panel-number">01</span>
+                    <p>Selected source PDF</p>
+                  </div>
+                  <span className="panel-meta">{selected.layout}</span>
+                </header>
+                <div className="source-frame">
+                  <img
+                    src={selected.previewUrl}
+                    alt={`Rendered first page of ${selected.title}`}
+                  />
                 </div>
-                <dl>
+                <div className="source-caption">
                   <div>
-                    <dt>Engine</dt>
-                    <dd>
-                      {displayedReceipt.engine} {displayedReceipt.engineVersion}
-                    </dd>
+                    <p>{selected.eyebrow}</p>
+                    <h3>{selected.title}</h3>
+                    <span>{selected.description}</span>
                   </div>
+                  <a href={selected.pdfUrl} target="_blank" rel="noreferrer">
+                    Inspect source PDF
+                    <span aria-hidden="true">↗</span>
+                  </a>
+                </div>
+              </article>
+
+              <article className="markdown-panel" data-state={runState}>
+                <header className="panel-header markdown-header">
                   <div>
-                    <dt>Source</dt>
-                    <dd>{displayedReceipt.sourceBytes.toLocaleString()} bytes</dd>
+                    <span className="panel-number">02</span>
+                    <p>Conversion result</p>
                   </div>
-                  <div>
-                    <dt>Markdown</dt>
-                    <dd>
-                      {displayedReceipt.markdownCharacters.toLocaleString()} characters
-                    </dd>
+                  {liveResult ? (
+                    <button type="button" onClick={copyMarkdown}>
+                      {copyState}
+                    </button>
+                  ) : null}
+                </header>
+
+                {liveResult ? (
+                  <>
+                    <div className="conversion-success" role="status">
+                      <span className="verified-mark" aria-hidden="true">
+                        ✓
+                      </span>
+                      <div>
+                        <strong>Live conversion complete</strong>
+                        <p>{runMessage}</p>
+                      </div>
+                    </div>
+                    <pre className="markdown-output">
+                      <code>{liveResult.markdown}</code>
+                    </pre>
+                    <div className="run-receipt" aria-label="Live conversion receipt">
+                      <div className="receipt-heading">
+                        <p>SERVER RUN RECEIPT</p>
+                        <span>{liveResult.run.elapsedMs.toLocaleString()} ms</span>
+                      </div>
+                      <dl>
+                        <div>
+                          <dt>Engine</dt>
+                          <dd>
+                            {liveResult.run.engine} {liveResult.run.engineVersion}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Source</dt>
+                          <dd>{liveResult.run.sourceBytes.toLocaleString()} bytes</dd>
+                        </div>
+                        <div>
+                          <dt>Markdown</dt>
+                          <dd>
+                            {liveResult.run.markdownCharacters.toLocaleString()} chars
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Source SHA-256</dt>
+                          <dd>{liveResult.run.sourceSha256}</dd>
+                        </div>
+                        <div>
+                          <dt>Output SHA-256</dt>
+                          <dd>{liveResult.run.outputSha256}</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  </>
+                ) : (
+                  <div className="conversion-gate" data-state={runState}>
+                    <div className="gate-index" aria-hidden="true">
+                      {runState === "running" ? "···" : "02"}
+                    </div>
+                    <p className="gate-label">
+                      {runState === "running"
+                        ? "LIVE REQUEST IN PROGRESS"
+                        : runState === "error"
+                          ? "LIVE RUN FAILED"
+                          : "READY FOR A REAL RUN"}
+                    </p>
+                    <h3>
+                      {runState === "running"
+                        ? `Converting ${selected.title}`
+                        : runState === "error"
+                          ? "No result was returned."
+                          : "No Markdown yet."}
+                    </h3>
+                    <p className="gate-message" role="status" aria-live="polite">
+                      {runMessage}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={runState === "running"}
+                      onClick={runPrivateConversion}
+                    >
+                      {runState === "running"
+                        ? "Conversion running…"
+                        : runState === "error"
+                          ? "Try this conversion again"
+                          : "Run private conversion"}
+                    </button>
+                    <small>
+                      Only <code>{selected.id}</code> is sent. No visitor document is
+                      uploaded.
+                    </small>
                   </div>
-                  <div>
-                    <dt>Source SHA-256</dt>
-                    <dd>{displayedReceipt.sourceSha256}</dd>
-                  </div>
-                  <div>
-                    <dt>Output SHA-256</dt>
-                    <dd>{displayedReceipt.outputSha256}</dd>
-                  </div>
-                </dl>
-              </div>
-            </article>
-          </div>
+                )}
+              </article>
+            </div>
+          )}
         </section>
 
         <section className="truth-section" aria-labelledby="truth-title">
           <div className="truth-lead">
-            <p className="eyebrow">PROOF, NOT PROMISE</p>
-            <h2 id="truth-title">The browser never receives the signing secret.</h2>
+            <p className="eyebrow">THE BOUNDED PRODUCT</p>
+            <h2 id="truth-title">One real request. One inspectable outcome.</h2>
             <p>
-              Browsing uses the captured baseline. A fresh run sends only one fixed
-              sample ID to a same-origin Sites route, where the owner session is
-              checked before the Render request is signed server-side.
+              The browser sends only the selected sample ID to the same-origin
+              Sites route. That server route checks the owner session, signs the
+              request, and calls the managed converter. The browser receives only
+              the returned Markdown and run receipt.
             </p>
           </div>
           <div className="truth-columns">
             <div>
               <h3>What is here</h3>
               <ul>
-                <li>Three fictional, generated PDFs</li>
-                <li>Pre-rendered page previews</li>
-                <li>Captured Markdown and verification hashes</li>
-                <li>One owner-only, fixed-sample server action</li>
+                <li>Three fictional, generated PDF fixtures</li>
+                <li>One fixed-corpus server conversion route</li>
+                <li>Markdown revealed only after a successful run</li>
+                <li>A copy action and an inspectable run receipt</li>
               </ul>
             </div>
             <div>
               <h3>What is not here</h3>
               <ul>
                 <li>No uploads or visitor documents</li>
-                <li>No Java runtime or converter in Sites</li>
-                <li>No browser-visible secret or direct Render call</li>
-                <li>No storage, database, tunnel, or private-network link</li>
+                <li>No preloaded or fallback conversion result</li>
+                <li>No browser-visible signing secret</li>
+                <li>No storage, accounts, or invented capabilities</li>
               </ul>
             </div>
           </div>
@@ -406,7 +409,7 @@ export default function Home() {
         </div>
         <div className="footer-attribution">
           <p>
-            Sample outputs were produced locally with{" "}
+            The conversion engine used by this demo is{" "}
             <a
               href="https://github.com/opendataloader-project/opendataloader-pdf"
               target="_blank"
