@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: paperplain-converter
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    autoDeployTrigger: off
+    maxShutdownDelaySeconds: 70
+    envVars:
+      - key: PAPERPLAIN_ALLOWED_ORIGIN
+        sync: false
+      - key: PAPERPLAIN_REQUEST_SECRET
+        sync: false

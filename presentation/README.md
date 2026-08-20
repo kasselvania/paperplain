@@ -12,9 +12,10 @@ The presentation includes only:
 - client-side sample selection and clipboard interaction.
 
 It contains no upload route, converter process, Java runtime, visitor document
-handling, account, authentication, persistence, database, storage binding,
-secret, external connector, tunnel, proxy, or private-network link. Saving a
-Sites version does not mean that version has been deployed.
+handling, account, app-owned authentication, persistence, database, storage
+binding, secret, external connector, tunnel, proxy, or private-network link.
+Its owner-only Sites deployment remains a static presentation and is not
+connected to the separately prepared Render backend candidate.
 
 ## Validate
 

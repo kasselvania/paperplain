@@ -1,56 +1,83 @@
 # Technical boundaries
 
-## Implemented now
+## Local demo
 
-Paperplain's current boundary is deliberately local and fixed:
+Paperplain's original boundary remains available and unchanged in purpose:
 
-- The Node service binds only to `127.0.0.1`.
+- The default Node service binds only to `127.0.0.1`.
 - The conversion route accepts a sample ID from one server-side allowlist.
 - The allowlist contains exactly the three fictional PDFs committed in
   `public/samples/`.
-- `@opendataloader/pdf` 2.5.1 performs ordinary local conversion through its
-  Java process.
+- OpenDataLoader PDF 2.5.1 performs ordinary local processing through its
+  packaged Java engine.
 - Per-run temporary conversion output is removed after the response is built.
-- There are no accounts, uploads, visitor documents, external document URLs,
-  databases, tunnels, or non-local listeners.
+- There are no uploads, visitor documents, external document URLs, databases,
+  tunnels, or non-local listeners in this mode.
 
 `Start Paperplain.command` starts that same service, waits for its localhost
-manifest, and opens `http://127.0.0.1:4173` in the default browser. It does not
-change firewall, router, sharing, or network settings.
+health, and opens `http://127.0.0.1:4173`. It does not change firewall, router,
+sharing, or network settings.
 
-## Static presentation candidate
+## Static Sites presentation
 
-The separate `presentation/` surface is a static portfolio review candidate. It
-contains copies of the three canonical fictional PDFs, their pre-rendered page
-images, and Markdown plus receipt data captured from verified local runs. Its
-sample selector and clipboard action operate only on that bundled content.
+The separate `presentation/` surface contains copies of the three canonical
+fictional PDFs, their pre-rendered page images, and Markdown plus receipt data
+captured from verified local runs. Its sample selector and clipboard action
+operate only on bundled content.
 
-The presentation has no upload, visitor document path, converter process, Java
-runtime, conversion API, account, authentication, database, storage binding,
-secret, external connector, proxy, tunnel, or private-LAN connection. Saving a
-Sites version does not deploy it or create a live endpoint.
+The current Sites deployment is owner-only and remains static. It has no upload,
+visitor document path, converter process, Java runtime, conversion API,
+database, storage binding, secret, proxy, tunnel, or private-LAN connection.
+The Render preparation does not change its access or make its conversion action
+live.
 
-## Deferred phase 1: isolated LAN-only proof
+## Prepared Render candidate — not deployed here
 
-A future first networking experiment would run the converter in an isolated
-container and make it reachable only on a deliberately bounded LAN. That work
-has not started. It requires separate authorization and observable proof of the
-listener, container, and network boundary.
+The repository now includes a bounded Docker image and `render.yaml` for one
+free-tier Render web service. Preparing and pushing these files does not create
+a Render account, service, public URL, deployment, or Sites connection.
 
-## Deferred phase 2: security and threat-model review
+The hosted image contains only the server modules, production dependency, Java
+runtime, allowlist, and three fictional PDF fixtures. Hosted mode serves an
+empty `204` health endpoint and the authenticated conversion route. It does not
+serve the local UI, sample manifest, previews, PDFs, presentation, or arbitrary
+paths.
 
-The review must cover the exact phase-1 implementation rather than an imagined
-deployment. At minimum it should examine route allowlisting, process spawning,
-resource exhaustion, dependency and update handling, logs, browser-origin
-assumptions, container escape, LAN trust assumptions, shutdown, and recovery.
+The hosted route:
 
-## Deferred phase 3: private or published path
+- accepts only `POST /api/convert/<allowlisted-id>` with an empty body;
+- requires the exact configured HTTPS origin;
+- requires a 60-second HMAC-SHA256 request signature and one-time nonce;
+- remembers accepted nonces in memory to reject replay;
+- runs one conversion at a time and admits six conversions per minute;
+- caps each Java process at one thread and a 60-second execution deadline; and
+- returns generic errors without engine diagnostics or environment details.
 
-Only after the LAN proof and its review should a separately authorized decision
-choose whether any private or published path is appropriate. A live converter
-needs a Java-capable host.
+The origin header is not treated as authentication. The signature secret is the
+authorization boundary and must remain in server-side secret stores.
 
-ChatGPT Sites is not presumed to have direct access to a private LAN. Connecting
-a hosted interface to a private converter would create a separate network
-boundary with new authentication, authorization, availability, and threat-model
-requirements. No such bridge is designed or implemented here.
+## Static-browser gap
+
+A static browser page cannot safely hold the Render signing secret. The current
+Sites presentation therefore cannot call this backend directly. A separate,
+explicitly authorized release would need a trusted server-side signing route,
+secret configuration on both sides, and validation of the complete request
+path. Until then, the presentation must remain honest about showing captured
+outputs rather than a live conversion.
+
+The in-memory nonce store fits the single-instance free-tier candidate. It is
+not authority for horizontal scaling: multiple instances would require a shared
+replay store and a new persistence/security decision.
+
+## Still excluded
+
+- Arbitrary PDF upload or visitor documents
+- External document URLs or network retrieval
+- OCR, hybrid/AI enrichment, accounts, billing, or durable jobs
+- Database, persistent disk, object storage, or retained conversion output
+- Home-lab, LAN, router, Tailscale, VPN, tunnel, proxy, DNS, or custom domain
+- Client-side secrets or direct static-browser signing
+- Any claim that this repository preparation is a live Render deployment
+
+The next boundary is a user-controlled Render dashboard decision. A later Sites
+integration remains a separate source, secret, review, and deployment decision.

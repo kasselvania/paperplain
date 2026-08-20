@@ -1,0 +1,20 @@
+.git
+.github
+.DS_Store
+.env
+.env.*
+!.env.example
+node_modules
+npm-debug.log*
+outputs
+presentation
+requirements-dev.txt
+scripts
+tests
+work
+Start Paperplain.command
+public/app.js
+public/favicon.png
+public/index.html
+public/previews
+public/styles.css

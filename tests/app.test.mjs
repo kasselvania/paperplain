@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile, stat } from "node:fs/promises";
 import { after, before, test } from "node:test";
 
-import { createDemoServer } from "../server.mjs";
+import { createDemoServer, resolveRuntimeConfig } from "../server.mjs";
 
 let server;
 let baseUrl;
@@ -71,7 +71,8 @@ test("the macOS launcher is executable and preserves the localhost boundary", as
   assert.match(launcher, /http:\/\/127\.0\.0\.1/);
   assert.match(launcher, /\/usr\/bin\/open/);
   assert.doesNotMatch(launcher, /0\.0\.0\.0/);
-  assert.match(serverSource, /server\.listen\(port, "127\.0\.0\.1"/);
+  assert.match(serverSource, /host: "127\.0\.0\.1"/);
+  assert.equal(resolveRuntimeConfig({}).host, "127.0.0.1");
 });
 
 test("every fixture completes a real local conversion", async () => {
