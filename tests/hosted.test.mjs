@@ -341,6 +341,7 @@ test("the Render blueprint is manual, secret-free, and uses the bounded image", 
   assert.match(blueprint, /plan: free/);
   assert.match(blueprint, /healthCheckPath: \/healthz/);
   assert.match(blueprint, /autoDeployTrigger: off/);
+  assert.doesNotMatch(blueprint, /maxShutdownDelaySeconds/);
   assert.equal((blueprint.match(/sync: false/g) ?? []).length, 2);
   assert.doesNotMatch(blueprint, /PAPERPLAIN_REQUEST_SECRET:\s*\S+/);
 });

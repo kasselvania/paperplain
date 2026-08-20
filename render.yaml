@@ -6,7 +6,6 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /healthz
     autoDeployTrigger: off
-    maxShutdownDelaySeconds: 70
     envVars:
       - key: PAPERPLAIN_ALLOWED_ORIGIN
         sync: false
