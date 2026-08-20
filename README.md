@@ -18,13 +18,14 @@ with, sponsored by, or endorsed by OpenDataLoader PDF or its maintainers. See
 ## What is in this repository
 
 - A localhost demo that previews and converts the three fixed samples.
-- An owner-only static Sites presentation with captured, verified output. It is
-  still not a live converter.
+- An owner-only Sites presentation with captured, verified output plus an
+  undeployed server-route candidate for fresh fixed-sample runs.
 - A Docker and Render Blueprint candidate for a separately deployed,
   authenticated fixed-sample conversion API.
 
-The Render candidate is source preparation only. This repository does not prove
-that a Render service exists or that the Sites presentation is connected to it.
+Repository source alone does not prove that either hosted runtime is deployed,
+configured, connected, or healthy. The current live Sites version remains the
+earlier static presentation until a later deployment is explicitly authorized.
 
 ## Run locally on macOS
 
@@ -76,7 +77,8 @@ and Render configuration.
   nonce.
 - `public/` contains the dependency-free localhost interface and generated
   fixtures.
-- `presentation/` is the separate static Sites portfolio surface.
+- `presentation/` is the separate owner-only Sites portfolio and private
+  integration candidate.
 - `Dockerfile` contains only the hosted server, allowlist, samples, production
   dependencies, Node, and Java.
 - `render.yaml` describes one manually deployed free-tier Docker web service.
@@ -85,13 +87,15 @@ OpenDataLoader PDF 2.5.1 runs in ordinary local-processing mode. Its packaged
 Node integration starts a Java process; the bounded runner here invokes that
 same packaged JAR directly so it can enforce a hard process timeout.
 
-## Static Sites presentation
+## Sites presentation and private integration candidate
 
 `presentation/` lets a visitor browse the three fixtures and inspect Markdown
-captured from verified local conversions. It has no upload control, conversion
-route, Java process, visitor document handling, persistence, secret, or private
-network link. Its current owner-only deployment remains a static presentation;
-the Render candidate does not change that fact.
+captured from verified local conversions. The current owner-only deployment
+remains the earlier static presentation. This candidate branch adds an
+undeployed same-origin server route that can request a fresh conversion for one
+of the same three samples after Sites receives its server-only configuration.
+It adds no upload control, Java process, visitor document handling, persistence,
+database, storage, or private-network link.
 
 ## Render deployment candidate
 
@@ -157,12 +161,17 @@ clients can forge an `Origin` header. The HMAC is the authorization boundary.
 ### Important Sites boundary
 
 The signing secret must never appear in browser JavaScript, a public bundle, a
-URL, or client storage. Therefore the current static Sites page cannot call the
-Render conversion route directly. A later release would need a separately
-approved server-side Sites route or another trusted server-side signer holding
-the same secret. Until that exists and is deployed, the Sites page must continue
-to say that its outputs are captured and the live converter is not hosted in
-the preview.
+URL, or client storage. The candidate Sites worker therefore accepts only a
+same-origin `POST /api/convert/<sample-id>` from a platform-authenticated user,
+checks the three-item allowlist and empty body, wakes the Render health endpoint,
+then creates the short-lived HMAC request server-side. The browser receives only
+the sanitized conversion result.
+
+This authorization relies on the Sites access policy remaining owner-only in
+addition to the route's authenticated-user-header check. If access becomes
+shared or public, this integration must not be deployed without a new
+authorization design. The current live Sites version has not been replaced by
+this candidate.
 
 ### Resource and data controls
 
@@ -213,13 +222,40 @@ Nothing in this section has been performed by the repository preparation.
    explicitly apply the Blueprint when ready. Applying it creates and deploys a
    live public backend.
 7. After deployment, confirm `/healthz` returns `204` and an unsigned conversion
-   request returns `401`. A successful conversion should wait until the trusted
-   server-side signer is separately implemented and reviewed.
+   request returns `401`. A successful conversion should wait until the private
+   Sites variables below are configured and this candidate is separately
+   approved for deployment.
 
 Render supports secret placeholders with `sync: false`; its official
 [environment-variable documentation](https://render.com/docs/configure-environment-variables)
 describes how the dashboard collects those values during initial Blueprint
 creation.
+
+## Private Sites dashboard handoff
+
+The source is prepared, but no Sites environment value, saved version,
+deployment, or access policy has been changed.
+
+Before any Sites version is saved or deployed, the owner must manually configure
+these production runtime values in the existing private Paperplain Sites project:
+
+- `PAPERPLAIN_RENDER_ORIGIN` — the exact HTTPS origin shown by the Render
+  service, with no path or trailing slash. It must be a `*.onrender.com` origin.
+- `PAPERPLAIN_REQUEST_SECRET` — the exact same 64-character lowercase
+  hexadecimal value already stored in Render. Mark it as a Sites secret. Do not
+  generate a different value, add quotes or whitespace, expose it to the
+  browser, commit it, or send it to Codex.
+
+Keep the Sites access policy at custom owner-only: one allowed account, no
+workspace or tenant groups, and no external visitors. After manual
+configuration, the separately authorized release procedure is:
+
+1. rebuild and test this exact source;
+2. confirm client assets contain neither server variable name nor value;
+3. save one Sites version without changing access;
+4. deploy only with a fresh owner-only access readback; and
+5. verify a signed-out request is denied, each of the three fixed samples can
+   return a fresh receipt, and no browser request goes directly to Render.
 
 ## Regenerate the fictional corpus
 

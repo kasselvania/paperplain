@@ -2,7 +2,7 @@
   "name": "paperplain-sites-presentation",
   "version": "0.1.0",
   "private": true,
-  "description": "Static Sites presentation of verified Paperplain sample conversions.",
+  "description": "Owner-only Sites presentation and fixed-sample Render integration candidate.",
   "engines": {
     "node": ">=22.13.0"
   },

@@ -432,6 +432,10 @@ a {
   color: #f5f0e4;
 }
 
+.sample-button:disabled {
+  cursor: wait;
+}
+
 .sample-button-index,
 .sample-button-mark {
   font-family: var(--mono);
@@ -621,6 +625,66 @@ a {
   color: #ebe7dc;
   font-size: 0.62rem;
   cursor: pointer;
+}
+
+.private-run-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 25px;
+  border-bottom: 1px solid rgba(235, 231, 220, 0.14);
+  background: #22302a;
+}
+
+.private-run-bar > div {
+  min-width: 0;
+}
+
+.private-run-bar span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--accent-soft);
+  font-size: 0.52rem;
+  font-weight: 720;
+  letter-spacing: 0.12em;
+}
+
+.private-run-bar p {
+  margin: 0;
+  color: #aeb9b1;
+  font-size: 0.63rem;
+  line-height: 1.45;
+}
+
+.private-run-bar button {
+  min-height: 39px;
+  padding: 0 15px;
+  border: 1px solid rgba(235, 231, 220, 0.42);
+  background: transparent;
+  color: #f3efe5;
+  font-size: 0.61rem;
+  font-weight: 690;
+  cursor: pointer;
+}
+
+.private-run-bar button:hover:not(:disabled) {
+  border-color: var(--accent-soft);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.private-run-bar button:disabled {
+  cursor: wait;
+  opacity: 0.66;
+}
+
+.private-run-bar[data-state="success"] {
+  background: #263b31;
+}
+
+.private-run-bar[data-state="error"] {
+  background: #392725;
 }
 
 .markdown-note {
@@ -1023,6 +1087,16 @@ a {
   .markdown-header button {
     max-width: 126px;
     text-align: right;
+  }
+
+  .private-run-bar {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding-inline: 20px;
+  }
+
+  .private-run-bar button {
+    width: 100%;
   }
 
   .markdown-output {

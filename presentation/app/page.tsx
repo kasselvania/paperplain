@@ -7,7 +7,21 @@ import { useState } from "react";
 
 import sampleData from "./sample-data.json";
 
-type Sample = (typeof sampleData)[number];
+type LiveConversion = {
+  sampleId: string;
+  markdown: string;
+  run: {
+    engine: string;
+    engineVersion: string;
+    mode: string;
+    elapsedMs: number;
+    sourceBytes: number;
+    markdownCharacters: number;
+    sourceSha256: string;
+    outputSha256: string;
+  };
+};
+type RunState = "idle" | "running" | "success" | "error";
 
 const valueSteps = [
   {
@@ -30,22 +44,97 @@ const valueSteps = [
 export default function Home() {
   const [selectedId, setSelectedId] = useState(sampleData[0].id);
   const [copyState, setCopyState] = useState("Copy captured Markdown");
+  const [liveResult, setLiveResult] = useState<LiveConversion | null>(null);
+  const [runState, setRunState] = useState<RunState>("idle");
+  const [runMessage, setRunMessage] = useState(
+    "Runs only for the selected fixed sample through the private Sites route.",
+  );
   const selected = sampleData.find((sample) => sample.id === selectedId) ?? sampleData[0];
+  const hasLiveResult = liveResult?.sampleId === selected.id;
+  const displayedMarkdown = hasLiveResult ? liveResult.markdown : selected.markdown;
+  const displayedReceipt = hasLiveResult ? liveResult.run : selected.receipt;
 
-  async function copyMarkdown(sample: Sample) {
+  async function copyMarkdown() {
     try {
-      await navigator.clipboard.writeText(sample.markdown);
+      await navigator.clipboard.writeText(displayedMarkdown);
       setCopyState("Copied to clipboard");
     } catch {
       setCopyState("Copy unavailable");
     }
 
-    window.setTimeout(() => setCopyState("Copy captured Markdown"), 1800);
+    window.setTimeout(
+      () =>
+        setCopyState(
+          hasLiveResult ? "Copy fresh Markdown" : "Copy captured Markdown",
+        ),
+      1800,
+    );
   }
 
   function chooseSample(id: string) {
     setSelectedId(id);
+    setLiveResult(null);
+    setRunState("idle");
+    setRunMessage(
+      "Runs only for the selected fixed sample through the private Sites route.",
+    );
     setCopyState("Copy captured Markdown");
+  }
+
+  async function runPrivateConversion() {
+    const sampleId = selected.id;
+    setLiveResult(null);
+    setCopyState("Copy captured Markdown");
+    setRunState("running");
+    setRunMessage(
+      "Waking the bounded converter, then issuing a short-lived signed request…",
+    );
+
+    try {
+      const response = await fetch(
+        "/api/convert/" + encodeURIComponent(sampleId),
+        {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          credentials: "same-origin",
+          cache: "no-store",
+        },
+      );
+      const payload = (await response.json().catch(() => null)) as
+        | LiveConversion
+        | null;
+
+      if (
+        !response.ok ||
+        !payload ||
+        payload.sampleId !== sampleId ||
+        typeof payload.markdown !== "string"
+      ) {
+        const message =
+          response.status === 401
+            ? "An authenticated private Sites session is required."
+            : response.status === 403
+              ? "The private request was refused from this page."
+              : response.status === 429
+                ? "The converter is busy. Try again shortly."
+                : response.status === 503
+                  ? "The private Sites route is not configured yet."
+                  : "The private conversion is temporarily unavailable.";
+        setRunState("error");
+        setRunMessage(message);
+        return;
+      }
+
+      setLiveResult(payload);
+      setRunState("success");
+      setRunMessage(
+        "Fresh Markdown returned through the owner-only server route.",
+      );
+      setCopyState("Copy fresh Markdown");
+    } catch {
+      setRunState("error");
+      setRunMessage("The private conversion is temporarily unavailable.");
+    }
   }
 
   return (
@@ -59,21 +148,22 @@ export default function Home() {
         </a>
         <div className="candidate-status">
           <span className="status-dot" aria-hidden="true" />
-          Static review candidate
+          Private integration candidate
         </div>
       </header>
 
       <main>
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <p className="eyebrow">PDF → MARKDOWN / VERIFIED STATIC PRESENTATION</p>
+            <p className="eyebrow">PDF → MARKDOWN / OWNER-ONLY INTEGRATION</p>
             <h1 id="hero-title">
               Known documents in.
               <span>Clear context out.</span>
             </h1>
             <p className="hero-intro">
-              Paperplain shows how a curated PDF set can become structured,
-              inspectable Markdown—useful as context for AI and coding assistants.
+              Paperplain turns a curated PDF set into structured, inspectable
+              Markdown while keeping its signing key and converter call on the
+              server.
             </p>
             <a className="primary-link" href="#sample-explorer">
               Explore a verified sample
@@ -87,12 +177,12 @@ export default function Home() {
             </div>
             <p className="proof-label">FIXED FICTIONAL DOCUMENTS</p>
             <p>
-              Three PDFs. Three layouts. Three outputs captured from real local
-              conversion runs.
+              Three PDFs. Three layouts. A captured baseline plus one bounded
+              private route for a fresh conversion.
             </p>
             <div className="boundary-stamp">
-              <span>LIVE CONVERTER</span>
-              <strong>NOT HOSTED HERE</strong>
+              <span>SERVER-SIDE PATH</span>
+              <strong>OWNER-ONLY</strong>
             </div>
           </aside>
         </section>
@@ -116,12 +206,13 @@ export default function Home() {
         <section className="explorer" id="sample-explorer" aria-labelledby="explorer-title">
           <div className="section-heading explorer-heading">
             <div>
-              <p className="eyebrow">CAPTURED SAMPLE EXPLORER</p>
-              <h2 id="explorer-title">Inspect the source and every returned line.</h2>
+              <p className="eyebrow">FIXED SAMPLE EXPLORER</p>
+              <h2 id="explorer-title">Inspect the baseline, then request a fresh run.</h2>
             </div>
             <p className="section-note">
-              Selecting a sample changes only the static content shown on this page.
-              No request is sent to a converter.
+              Browsing stays static. The explicit private action sends only the
+              selected allowlisted sample ID through the owner-authenticated Sites
+              route.
             </p>
           </div>
 
@@ -136,6 +227,7 @@ export default function Home() {
                   type="button"
                   aria-pressed={isSelected}
                   aria-controls="sample-output"
+                  disabled={runState === "running"}
                   onClick={() => chooseSample(sample.id)}
                 >
                   <span className="sample-button-index">
@@ -186,48 +278,82 @@ export default function Home() {
               <header className="panel-header markdown-header">
                 <div>
                   <span className="panel-number">02</span>
-                  <p>Captured Markdown</p>
+                  <p>{hasLiveResult ? "Fresh Markdown" : "Captured Markdown"}</p>
                 </div>
-                <button type="button" onClick={() => copyMarkdown(selected)}>
+                <button type="button" onClick={copyMarkdown}>
                   {copyState}
                 </button>
               </header>
+              <div className="private-run-bar" data-state={runState}>
+                <div>
+                  <span>OWNER-ONLY SERVER ACTION</span>
+                  <p role="status" aria-live="polite">
+                    {runMessage}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={runState === "running"}
+                  onClick={runPrivateConversion}
+                >
+                  {runState === "running"
+                    ? "Conversion running…"
+                    : "Run private conversion"}
+                </button>
+              </div>
               <div className="markdown-note">
                 <span className="verified-mark" aria-hidden="true">
                   ✓
                 </span>
-                Displayed verbatim from a verified local OpenDataLoader PDF 2.5.1 run.
+                {hasLiveResult
+                  ? "Returned from a fresh, signed OpenDataLoader PDF run."
+                  : "Displayed verbatim from a verified local OpenDataLoader PDF 2.5.1 run."}
               </div>
               <pre className="markdown-output">
-                <code>{selected.markdown}</code>
+                <code>{displayedMarkdown}</code>
               </pre>
-              <div className="run-receipt" aria-label="Static capture receipt">
+              <div
+                className="run-receipt"
+                aria-label={
+                  hasLiveResult ? "Fresh private run receipt" : "Static capture receipt"
+                }
+              >
                 <div className="receipt-heading">
-                  <p>STATIC CAPTURE RECEIPT</p>
-                  <span>Not a live run</span>
+                  <p>
+                    {hasLiveResult
+                      ? "PRIVATE SERVER RUN RECEIPT"
+                      : "STATIC CAPTURE RECEIPT"}
+                  </p>
+                  <span>
+                    {hasLiveResult
+                      ? liveResult.run.elapsedMs.toLocaleString() + " ms"
+                      : "Not a live run"}
+                  </span>
                 </div>
                 <dl>
                   <div>
                     <dt>Engine</dt>
                     <dd>
-                      {selected.receipt.engine} {selected.receipt.engineVersion}
+                      {displayedReceipt.engine} {displayedReceipt.engineVersion}
                     </dd>
                   </div>
                   <div>
                     <dt>Source</dt>
-                    <dd>{selected.receipt.sourceBytes.toLocaleString()} bytes</dd>
+                    <dd>{displayedReceipt.sourceBytes.toLocaleString()} bytes</dd>
                   </div>
                   <div>
                     <dt>Markdown</dt>
-                    <dd>{selected.receipt.markdownCharacters.toLocaleString()} characters</dd>
+                    <dd>
+                      {displayedReceipt.markdownCharacters.toLocaleString()} characters
+                    </dd>
                   </div>
                   <div>
                     <dt>Source SHA-256</dt>
-                    <dd>{selected.receipt.sourceSha256}</dd>
+                    <dd>{displayedReceipt.sourceSha256}</dd>
                   </div>
                   <div>
                     <dt>Output SHA-256</dt>
-                    <dd>{selected.receipt.outputSha256}</dd>
+                    <dd>{displayedReceipt.outputSha256}</dd>
                   </div>
                 </dl>
               </div>
@@ -238,11 +364,11 @@ export default function Home() {
         <section className="truth-section" aria-labelledby="truth-title">
           <div className="truth-lead">
             <p className="eyebrow">PROOF, NOT PROMISE</p>
-            <h2 id="truth-title">The live converter is not hosted in this preview.</h2>
+            <h2 id="truth-title">The browser never receives the signing secret.</h2>
             <p>
-              This page demonstrates the Paperplain interaction, the fixed sample
-              corpus, and outputs produced by the real local integration. It does not
-              represent a production conversion service.
+              Browsing uses the captured baseline. A fresh run sends only one fixed
+              sample ID to a same-origin Sites route, where the owner session is
+              checked before the Render request is signed server-side.
             </p>
           </div>
           <div className="truth-columns">
@@ -252,16 +378,16 @@ export default function Home() {
                 <li>Three fictional, generated PDFs</li>
                 <li>Pre-rendered page previews</li>
                 <li>Captured Markdown and verification hashes</li>
-                <li>A static, interactive portfolio presentation</li>
+                <li>One owner-only, fixed-sample server action</li>
               </ul>
             </div>
             <div>
               <h3>What is not here</h3>
               <ul>
                 <li>No uploads or visitor documents</li>
-                <li>No converter process or Java runtime</li>
-                <li>No accounts, storage, database, or secrets</li>
-                <li>No proxy, tunnel, or private-network connection</li>
+                <li>No Java runtime or converter in Sites</li>
+                <li>No browser-visible secret or direct Render call</li>
+                <li>No storage, database, tunnel, or private-network link</li>
               </ul>
             </div>
           </div>

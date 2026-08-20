@@ -5,8 +5,12 @@ import {
 } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 
+import { handlePrivateConversionRequest } from "../lib/private-conversion.mjs";
+
 interface Env {
   ASSETS: Fetcher;
+  PAPERPLAIN_RENDER_ORIGIN?: string;
+  PAPERPLAIN_REQUEST_SECRET?: string;
   IMAGES: {
     input(stream: ReadableStream): {
       transform(options: Record<string, unknown>): {
@@ -27,6 +31,10 @@ interface ExecutionContext {
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname.startsWith("/api/convert/")) {
+      return handlePrivateConversionRequest(request, env);
+    }
 
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];

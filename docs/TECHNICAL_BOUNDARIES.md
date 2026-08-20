@@ -18,18 +18,18 @@ Paperplain's original boundary remains available and unchanged in purpose:
 health, and opens `http://127.0.0.1:4173`. It does not change firewall, router,
 sharing, or network settings.
 
-## Static Sites presentation
+## Sites presentation
 
 The separate `presentation/` surface contains copies of the three canonical
 fictional PDFs, their pre-rendered page images, and Markdown plus receipt data
 captured from verified local runs. Its sample selector and clipboard action
 operate only on bundled content.
 
-The current Sites deployment is owner-only and remains static. It has no upload,
-visitor document path, converter process, Java runtime, conversion API,
-database, storage binding, secret, proxy, tunnel, or private-LAN connection.
-The Render preparation does not change its access or make its conversion action
-live.
+The current Sites deployment is owner-only and remains the earlier static
+version. The candidate source adds one same-origin conversion route, but it is
+not configured, saved as a Sites version, or deployed by this work. Sites still
+contains no upload, visitor document path, converter process, Java runtime,
+database, storage binding, tunnel, or private-LAN connection.
 
 ## Prepared Render candidate — not deployed here
 
@@ -59,14 +59,25 @@ environment representation is exactly 64 lowercase hexadecimal characters;
 the signer and verifier decode that representation to the same 32-byte HMAC
 key.
 
-## Static-browser gap
+## Private Sites signer candidate
 
-A static browser page cannot safely hold the Render signing secret. The current
-Sites presentation therefore cannot call this backend directly. A separate,
-explicitly authorized release would need a trusted server-side signing route,
-secret configuration on both sides, and validation of the complete request
-path. Until then, the presentation must remain honest about showing captured
-outputs rather than a live conversion.
+A static browser page cannot safely hold the Render signing secret. The
+candidate worker keeps it in Sites server environment only and intercepts
+`POST /api/convert/<allowlisted-id>` before the application router. It requires
+both platform-authenticated user headers and the exact same-origin `Origin`,
+rejects every body and non-allowlisted ID, and returns `503` without contacting
+Render when either server variable is missing or malformed.
+
+The worker calls `GET /healthz` before generating the signed request so a Render
+free-tier cold start does not consume the backend's 60-second authentication
+window. It then signs the empty-body request with a fresh timestamp and nonce,
+refuses redirects, bounds both requests with deadlines, and sanitizes the
+upstream result before returning it to the browser.
+
+The authenticated-user headers establish a signed-in Sites user. Owner
+authorization additionally depends on the Sites access policy remaining custom
+owner-only with exactly one allowed account and no groups or external visitors.
+A shared or public policy invalidates this release shape.
 
 The in-memory nonce store fits the single-instance free-tier candidate. It is
 not authority for horizontal scaling: multiple instances would require a shared
@@ -79,8 +90,9 @@ replay store and a new persistence/security decision.
 - OCR, hybrid/AI enrichment, accounts, billing, or durable jobs
 - Database, persistent disk, object storage, or retained conversion output
 - Home-lab, LAN, router, Tailscale, VPN, tunnel, proxy, DNS, or custom domain
-- Client-side secrets or direct static-browser signing
-- Any claim that this repository preparation is a live Render deployment
+- Client-side secrets, direct browser-to-Render calls, or static-browser signing
+- Any claim that this source candidate is a deployed Sites-to-Render release
 
-The next boundary is a user-controlled Render dashboard decision. A later Sites
-integration remains a separate source, secret, review, and deployment decision.
+The next boundary is manual configuration of the matching secret and exact
+Render origin in the existing private Sites project. Saving and deploying a
+Sites version remains a separate, explicitly authorized decision.
