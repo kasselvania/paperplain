@@ -1,0 +1,9 @@
+/node_modules
+/coverage
+__pycache__/
+*.pyc
+.DS_Store
+npm-debug.log*
+.env*
+/outputs/
+/work/

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Paperplain is a fixed-corpus PDF-to-Markdown demo with real local conversion and inspectable output."
+    />
+    <meta name="theme-color" content="#f1eee5" />
+    <title>Paperplain - PDF to Markdown, made inspectable</title>
+    <link rel="icon" href="/favicon.png" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Paperplain home">
+          <span class="brand-mark" aria-hidden="true">Pp</span>
+          <span>Paperplain</span>
+        </a>
+        <div class="topbar-note">
+          <span class="status-dot" aria-hidden="true"></span>
+          Local demo / fixed fixtures
+        </div>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="page-title">
+          <div>
+            <p class="kicker">PDF -&gt; MARKDOWN / SMALL &amp; REAL</p>
+            <h1 id="page-title">See the source.<br />Inspect every line.</h1>
+          </div>
+          <div class="intro-copy">
+            <p>
+              Choose a generated document, preview its actual page, then run one
+              bounded server-side transform. The Markdown below is returned by
+              the converter - not a prepared example.
+            </p>
+            <div class="boundary-note">
+              <span class="boundary-icon" aria-hidden="true">01</span>
+              <span><strong>Fixed sample corpus.</strong> No uploads. No visitor documents.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="workspace" aria-label="PDF conversion workspace">
+          <aside class="library" aria-labelledby="library-title">
+            <div class="section-heading">
+              <div>
+                <p class="micro-label">Corpus</p>
+                <h2 id="library-title">Three layouts</h2>
+              </div>
+              <span class="count-badge" aria-label="three samples">03</span>
+            </div>
+            <div class="sample-list" id="sample-list" aria-live="polite">
+              <div class="sample-skeleton"></div>
+              <div class="sample-skeleton"></div>
+              <div class="sample-skeleton"></div>
+            </div>
+            <div class="library-footnote">
+              <span aria-hidden="true">*</span>
+              All names, content, and layouts were created for this demo.
+            </div>
+          </aside>
+
+          <div class="lab" id="lab" aria-busy="false">
+            <header class="lab-header">
+              <div class="selected-meta">
+                <p class="micro-label" id="selected-eyebrow">Select a sample</p>
+                <h2 id="selected-title">Loading the corpus...</h2>
+                <p id="selected-description"></p>
+              </div>
+              <button class="convert-button" id="convert-button" type="button" disabled>
+                <span>Convert this sample</span>
+                <span class="button-arrow" aria-hidden="true">-&gt;</span>
+              </button>
+            </header>
+
+            <div class="stage-grid">
+              <article class="panel source-panel" aria-labelledby="source-heading">
+                <div class="panel-bar">
+                  <div>
+                    <span class="panel-index">01</span>
+                    <h3 id="source-heading">Source PDF</h3>
+                  </div>
+                  <span class="panel-detail" id="layout-detail">Preview</span>
+                </div>
+                <div class="document-stage" id="document-stage">
+                  <img id="preview-image" alt="" />
+                  <div class="paper-shadow" aria-hidden="true"></div>
+                </div>
+              </article>
+
+              <article class="panel output-panel" aria-labelledby="output-heading">
+                <div class="panel-bar output-bar">
+                  <div>
+                    <span class="panel-index">02</span>
+                    <h3 id="output-heading">Markdown output</h3>
+                  </div>
+                  <div class="output-actions">
+                    <span class="run-state" id="run-state">Not run</span>
+                    <button class="copy-button" id="copy-button" type="button" hidden>
+                      Copy
+                    </button>
+                  </div>
+                </div>
+                <div class="markdown-shell">
+                  <div class="markdown-gutter" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                  </div>
+                  <pre id="markdown-output" tabindex="0"><code># Awaiting a real conversion
+
+Select one of the generated samples, then use
+"Convert this sample" to inspect the returned Markdown.</code></pre>
+                </div>
+              </article>
+            </div>
+
+            <footer class="run-drawer" aria-live="polite">
+              <div class="run-summary">
+                <div class="activity-mark" id="activity-mark" aria-hidden="true"></div>
+                <div>
+                  <p class="micro-label">Run receipt</p>
+                  <p id="run-message">Ready for a fixed-corpus conversion.</p>
+                </div>
+              </div>
+              <dl class="metrics" id="metrics">
+                <div>
+                  <dt>Engine</dt>
+                  <dd id="metric-engine">Checking...</dd>
+                </div>
+                <div>
+                  <dt>Server time</dt>
+                  <dd id="metric-time">-</dd>
+                </div>
+                <div>
+                  <dt>Source</dt>
+                  <dd id="metric-source">-</dd>
+                </div>
+                <div>
+                  <dt>SHA-256</dt>
+                  <dd id="metric-hash">-</dd>
+                </div>
+              </dl>
+            </footer>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <p>One allowlisted transform. No upload route. No persistence.</p>
+        <p>OpenDataLoader PDF 2.5.1 / ordinary local mode / Java 11+</p>
+      </footer>
+    </div>
+  </body>
+</html>
