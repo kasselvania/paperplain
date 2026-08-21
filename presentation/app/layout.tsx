@@ -4,7 +4,7 @@ import "./globals.css";
 
 const title = "Paperplain — Verified PDF-to-Markdown samples";
 const description =
-  "An owner-only Paperplain demo that converts one of three fictional PDFs through a server-signed private route and reveals Markdown only after a successful run.";
+  "A public Paperplain demo that converts one of three fictional PDFs through a server-signed fixed-sample route and reveals Markdown only after a successful run.";
 
 export const metadata: Metadata = {
   title,
@@ -22,10 +22,6 @@ export const metadata: Metadata = {
     card: "summary",
     title,
     description,
-  },
-  robots: {
-    index: false,
-    follow: false,
   },
 };
 

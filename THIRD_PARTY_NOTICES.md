@@ -18,9 +18,9 @@ license material. OpenDataLoader PDF is a dependency used by this demo;
 Paperplain is not affiliated with, sponsored by, or endorsed by OpenDataLoader
 PDF or its maintainers.
 
-The static Sites presentation displays Markdown previously produced by that
-local OpenDataLoader PDF integration. The converter and its Java process are not
-included in or contacted by the presentation.
+The Sites presentation requests conversion through Paperplain's bounded
+server-side route. OpenDataLoader PDF and its Java process run in the separate
+converter service; they are not bundled into browser or Sites client assets.
 
 This notice records third-party attribution. It does not select or grant a
 license for the independent Paperplain source.

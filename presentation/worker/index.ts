@@ -5,7 +5,7 @@ import {
 } from "vinext/server/image-optimization";
 import handler from "vinext/server/app-router-entry";
 
-import { handlePrivateConversionRequest } from "../lib/private-conversion.mjs";
+import { handleConversionRequest } from "../lib/conversion-route.mjs";
 
 interface Env {
   ASSETS: Fetcher;
@@ -33,7 +33,7 @@ const worker = {
     const url = new URL(request.url);
 
     if (url.pathname.startsWith("/api/convert/")) {
-      return handlePrivateConversionRequest(request, env);
+      return handleConversionRequest(request, env);
     }
 
     if (url.pathname === "/_vinext/image") {

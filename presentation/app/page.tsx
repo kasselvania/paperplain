@@ -54,11 +54,9 @@ export default function Home() {
     } catch {
       setCopyState("Copy unavailable");
     }
-
-    window.setTimeout(() => setCopyState("Copy Markdown"), 1800);
   }
 
-  async function runPrivateConversion() {
+  async function runConversion() {
     if (!selected) return;
 
     const sampleId = selected.id;
@@ -66,7 +64,7 @@ export default function Home() {
     setCopyState("Copy Markdown");
     setRunState("running");
     setRunMessage(
-      "A real server request is running. The managed converter may be waking from idle.",
+      "Request sent. Waiting for the hosted converter. Markdown will appear only after the real request succeeds.",
     );
 
     try {
@@ -90,15 +88,13 @@ export default function Home() {
         typeof payload.markdown !== "string"
       ) {
         const message =
-          response.status === 401
-            ? "The owner-authenticated Sites session was not accepted."
-            : response.status === 403
-              ? "The server refused this page origin."
-              : response.status === 429
-                ? "The converter is busy. Try this sample again shortly."
-                : response.status === 503
-                  ? "The private server route is not configured."
-                  : "The converter did not return a result. Nothing has been substituted.";
+          response.status === 403
+            ? "The server refused this page origin."
+            : response.status === 429
+              ? "The converter is busy. Try this sample again shortly."
+              : response.status === 503
+                ? "The hosted converter is not configured."
+                : "The converter did not return a result. Nothing has been substituted.";
         setRunState("error");
         setRunMessage(message);
         return;
@@ -124,9 +120,9 @@ export default function Home() {
           </span>
           <span>Paperplain</span>
         </a>
-        <div className="candidate-status">
+        <div className="demo-status">
           <span className="status-dot" aria-hidden="true" />
-          Owner-only integration
+          Public fixed-sample demo
         </div>
       </header>
 
@@ -240,11 +236,20 @@ export default function Home() {
                   </div>
                   <span className="panel-meta">{selected.layout}</span>
                 </header>
-                <div className="source-frame">
-                  <img
-                    src={selected.previewUrl}
-                    alt={`Rendered first page of ${selected.title}`}
-                  />
+                <div className="source-frame" aria-busy={runState === "running"}>
+                  <div className="source-document" data-sample={selected.id}>
+                    <img
+                      src={selected.previewUrl}
+                      alt={`Rendered first page of ${selected.title}`}
+                    />
+                    {runState === "running" ? (
+                      <div className="scan-visual" aria-hidden="true">
+                        {Array.from({ length: 6 }, (_, index) => (
+                          <span className={`scan-region region-${index + 1}`} key={index} />
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
                 <div className="source-caption">
                   <div>
@@ -259,7 +264,11 @@ export default function Home() {
                 </div>
               </article>
 
-              <article className="markdown-panel" data-state={runState}>
+              <article
+                className="markdown-panel"
+                data-state={runState}
+                aria-busy={runState === "running"}
+              >
                 <header className="panel-header markdown-header">
                   <div>
                     <span className="panel-number">02</span>
@@ -322,18 +331,18 @@ export default function Home() {
                 ) : (
                   <div className="conversion-gate" data-state={runState}>
                     <div className="gate-index" aria-hidden="true">
-                      {runState === "running" ? "···" : "02"}
+                      02
                     </div>
                     <p className="gate-label">
                       {runState === "running"
-                        ? "LIVE REQUEST IN PROGRESS"
+                        ? "REQUEST SENT"
                         : runState === "error"
                           ? "LIVE RUN FAILED"
                           : "READY FOR A REAL RUN"}
                     </p>
                     <h3>
                       {runState === "running"
-                        ? `Converting ${selected.title}`
+                        ? "Waiting for fresh Markdown."
                         : runState === "error"
                           ? "No result was returned."
                           : "No Markdown yet."}
@@ -344,17 +353,23 @@ export default function Home() {
                     <button
                       type="button"
                       disabled={runState === "running"}
-                      onClick={runPrivateConversion}
+                      onClick={runConversion}
                     >
                       {runState === "running"
-                        ? "Conversion running…"
+                        ? "Waiting for result…"
                         : runState === "error"
                           ? "Try this conversion again"
-                          : "Run private conversion"}
+                          : "Run demo conversion"}
                     </button>
                     <small>
-                      Only <code>{selected.id}</code> is sent. No visitor document is
-                      uploaded.
+                      {runState === "running" ? (
+                        "The scan is a waiting visualization, not measured progress."
+                      ) : (
+                        <>
+                          Only <code>{selected.id}</code> is sent. No visitor
+                          document is uploaded.
+                        </>
+                      )}
                     </small>
                   </div>
                 )}
@@ -369,9 +384,9 @@ export default function Home() {
             <h2 id="truth-title">One real request. One inspectable outcome.</h2>
             <p>
               The browser sends only the selected sample ID to the same-origin
-              Sites route. That server route checks the owner session, signs the
-              request, and calls the managed converter. The browser receives only
-              the returned Markdown and run receipt.
+              public Sites route. That route checks the fixed allowlist, signs one
+              short-lived request, and calls the managed converter. The browser
+              receives only the returned Markdown and run receipt.
             </p>
           </div>
           <div className="truth-columns">
@@ -394,6 +409,20 @@ export default function Home() {
               </ul>
             </div>
           </div>
+          <p className="benchmark-note">
+            Powered by{" "}
+            <a
+              href="https://github.com/opendataloader-project/opendataloader-pdf#extraction-benchmarks"
+              target="_blank"
+              rel="noreferrer"
+            >
+              OpenDataLoader PDF
+            </a>
+            . The upstream project reports 0.015 seconds per page in its fast
+            local benchmark—more than 1,000 pages per minute under those benchmark
+            conditions. This hosted demo runs one fixed sample at a time and may
+            take longer while the demo server wakes.
+          </p>
         </section>
       </main>
 

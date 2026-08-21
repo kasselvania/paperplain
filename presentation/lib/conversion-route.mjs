@@ -33,13 +33,6 @@ function isRedirectStatus(status) {
   return status >= 300 && status <= 399;
 }
 
-function hasAuthenticatedSitesUser(request) {
-  return Boolean(
-    request.headers.get("oai-authenticated-user-id") &&
-      request.headers.get("oai-authenticated-user-email"),
-  );
-}
-
 async function hasRequestPayload(request) {
   if (request.body === null) return false;
 
@@ -195,15 +188,11 @@ function safeUpstreamResult(value, sampleId) {
   };
 }
 
-export async function handlePrivateConversionRequest(
+export async function handleConversionRequest(
   request,
   env,
   runtime = {},
 ) {
-  if (!hasAuthenticatedSitesUser(request)) {
-    return json({ error: "Authentication required." }, 401);
-  }
-
   const url = new URL(request.url);
   if (request.headers.get("origin") !== url.origin) {
     return json({ error: "Request origin refused." }, 403);
@@ -232,7 +221,7 @@ export async function handlePrivateConversionRequest(
 
   const config = readServerConfig(env);
   if (!config) {
-    return json({ error: "Private conversion is not configured." }, 503);
+    return json({ error: "Conversion is not configured." }, 503);
   }
 
   const fetcher = runtime.fetch ?? globalThis.fetch;
@@ -253,14 +242,14 @@ export async function handlePrivateConversionRequest(
       WAKE_TIMEOUT_MS,
     );
     if (health.status !== 204) {
-      return json({ error: "Private conversion is unavailable." }, 502);
+      return json({ error: "Conversion is unavailable." }, 502);
     }
 
     const pathname = "/api/convert/" + sampleId;
     const timestamp = Math.floor(now() / 1_000);
     const nonce = randomUUID().replaceAll("-", "");
     if (!NONCE_PATTERN.test(nonce)) {
-      return json({ error: "Private conversion is unavailable." }, 503);
+      return json({ error: "Conversion is unavailable." }, 503);
     }
 
     const canonical = canonicalRequest({
@@ -288,32 +277,32 @@ export async function handlePrivateConversionRequest(
     );
 
     if (isRedirectStatus(upstream.status)) {
-      return json({ error: "Private conversion is unavailable." }, 502);
+      return json({ error: "Conversion is unavailable." }, 502);
     }
     if (upstream.status === 429) {
-      return json({ error: "Private converter is busy." }, 429);
+      return json({ error: "Converter is busy." }, 429);
     }
     if (!upstream.ok) {
-      return json({ error: "Private conversion is unavailable." }, 502);
+      return json({ error: "Conversion is unavailable." }, 502);
     }
 
     const text = await upstream.text();
     if (text.length > MAX_MARKDOWN_CHARACTERS * 2) {
-      return json({ error: "Private conversion is unavailable." }, 502);
+      return json({ error: "Conversion is unavailable." }, 502);
     }
 
     let parsed;
     try {
       parsed = JSON.parse(text);
     } catch {
-      return json({ error: "Private conversion is unavailable." }, 502);
+      return json({ error: "Conversion is unavailable." }, 502);
     }
 
     const result = safeUpstreamResult(parsed, sampleId);
     return result
       ? json(result, 200)
-      : json({ error: "Private conversion is unavailable." }, 502);
+      : json({ error: "Conversion is unavailable." }, 502);
   } catch {
-    return json({ error: "Private conversion is unavailable." }, 502);
+    return json({ error: "Conversion is unavailable." }, 502);
   }
 }

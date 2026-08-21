@@ -1,31 +1,82 @@
 # Paperplain
 
-Paperplain is a small, independent PDF-to-Markdown integration demo. It keeps
-the product boundary intentionally narrow: three generated fictional PDFs, one
-server-side transform, and inspectable Markdown output. There is no upload
-route and no path for visitor documents.
+Paperplain is a small, independent PDF-to-Markdown integration demo. Its entire
+product boundary is three generated fictional PDFs, one server-side transform,
+and fresh inspectable Markdown. There is no upload route and no path for visitor
+documents.
 
-Paperplain does **not** implement the PDF conversion engine. It uses the
-converter shipped by
-[`@opendataloader/pdf`](https://www.npmjs.com/package/@opendataloader/pdf), the
-Node package from the
-[OpenDataLoader PDF project](https://github.com/opendataloader-project/opendataloader-pdf).
-The pinned 2.5.1 package and its upstream repository identify OpenDataLoader PDF
-as Apache-2.0 licensed. Paperplain is an independent demo and is not affiliated
-with, sponsored by, or endorsed by OpenDataLoader PDF or its maintainers. See
-[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for exact attribution.
+Public presentation: [paperplain.peter-kassel.chatgpt.site](https://paperplain.peter-kassel.chatgpt.site/)
 
-## What is in this repository
+Paperplain does **not** implement the PDF conversion engine. It uses
+[`@opendataloader/pdf`](https://www.npmjs.com/package/@opendataloader/pdf) from
+the [OpenDataLoader PDF project](https://github.com/opendataloader-project/opendataloader-pdf).
+The pinned 2.5.1 package and upstream repository identify that dependency as
+Apache-2.0 licensed. Paperplain is not affiliated with, sponsored by, or
+endorsed by OpenDataLoader PDF or its maintainers. See
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for attribution.
 
-- A localhost demo that previews and converts the three fixed samples.
-- An owner-only Sites interface that begins empty and reveals Markdown only
-  after a successful fixed-sample server conversion.
-- A Docker and Render Blueprint candidate for a separately deployed,
-  authenticated fixed-sample conversion API.
+## The demo contract
 
-Repository source alone does not prove that either hosted runtime is deployed,
-configured, connected, or healthy. Hosted state must be verified at the real
-Sites-to-Render request boundary.
+1. The page opens with no selected PDF and no Markdown result.
+2. A visitor chooses one of three fictional fixtures and inspects its source.
+3. One explicit action requests a real server conversion.
+4. A CSS scan communicates waiting without claiming measured progress.
+5. Fresh Markdown, a run receipt, and the copy action appear only after success.
+6. Failure reveals no captured or substitute output.
+
+The public server route accepts only one of these IDs:
+
+- `field-brief`
+- `studio-invoice`
+- `block-bulletin`
+
+It accepts no body, PDF, URL, filename, or arbitrary visitor content. There is
+no persistence, database, storage bucket, account system, OCR service, hybrid
+processing, home-lab connection, tunnel, proxy, or direct browser-to-Render
+request.
+
+## Architecture
+
+- `presentation/` contains the public Sites portfolio and server-side signer.
+- `server.mjs` provides separate localhost and hosted converter modes.
+- `lib/samples.mjs` is the converter's fixed-corpus allowlist.
+- `lib/converter.mjs` runs the packaged OpenDataLoader PDF Java engine with a
+  hard deadline and removes temporary output.
+- `lib/request-auth.mjs` verifies the hosted HMAC, timestamp, and nonce.
+- `Dockerfile` and `render.yaml` describe the bounded Render converter.
+- `public/` contains the dependency-free localhost UI and generated fixtures.
+
+The Sites route keeps the signing secret server-side, wakes the Render service,
+and signs an empty fixed-sample request. Render verifies the signature and
+returns a sanitized result. Browser assets contain neither the secret nor the
+Render origin.
+
+## Public safety boundary
+
+The Sites action is intentionally anonymous so a potential client can run the
+demo without an account. Same-origin checking is defense in depth, not user
+authentication: a non-browser caller can forge an `Origin` header.
+
+The capability is safe because it is narrow. A public caller can request only
+conversion of the three committed fictional fixtures. Render permits one active
+conversion and six admitted conversions per minute per instance, rejects nonce
+replay, uses ephemeral temporary files, and returns generic errors. The HMAC
+prevents direct callers from authorizing work at Render.
+
+This single-instance design is not authority for horizontal scaling. Scaling
+would require a separately designed shared replay and rate-limit store.
+
+## Performance context
+
+OpenDataLoader PDF's published extraction table reports `0.015 s/page` for its
+fast local mode—more than 1,000 pages per minute under those benchmark
+conditions. This is an upstream benchmark, not an independently measured
+Paperplain result. The hosted portfolio demo runs one fixed sample at a time and
+can take longer while its managed service wakes. Upstream also recommends
+batching because each conversion invocation starts a JVM process.
+
+See the upstream
+[extraction benchmark](https://github.com/opendataloader-project/opendataloader-pdf#extraction-benchmarks).
 
 ## Run locally on macOS
 
@@ -41,13 +92,9 @@ npm install
 ```
 
 Then double-click `Start Paperplain.command` in Finder. It starts the service at
-`http://127.0.0.1:4173`, waits for the local endpoint to become ready, and opens
-the default browser. Keep the Terminal window open; press Control-C or close the
-window to stop Paperplain.
-
-The launcher starts Node and the converter's Java process. A bare HTML file
-cannot do that, so opening `public/index.html` directly is not a working
-substitute.
+`http://127.0.0.1:4173` and opens the default browser. Keep the Terminal window
+open; press Control-C to stop it. Opening `public/index.html` directly cannot
+start Node or Java and is not a working substitute.
 
 The equivalent Terminal command is:
 
@@ -55,212 +102,42 @@ The equivalent Terminal command is:
 npm start
 ```
 
+## Hosted configuration
+
+Render requires:
+
+- `PAPERPLAIN_ALLOWED_ORIGIN` — the exact public Sites HTTPS origin, with no
+  path or trailing slash.
+- `PAPERPLAIN_REQUEST_SECRET` — exactly 64 lowercase hexadecimal characters
+  encoding 32 random bytes.
+
+Sites requires:
+
+- `PAPERPLAIN_RENDER_ORIGIN` — the exact `https://…onrender.com` service origin,
+  with no path or trailing slash.
+- `PAPERPLAIN_REQUEST_SECRET` — the exact same secret stored in Render.
+
+Secret values must remain in the two server environments. Do not put them in a
+URL, browser code, client storage, logs, or source control.
+
 ## Verify
+
+The converter and Sites presentation are intentionally tested separately:
 
 ```bash
 npm test
+cd presentation && npm test
 ```
 
-The suite checks both runtime modes. It exercises the localhost surface and
-converts all three PDFs through the actual Java engine. Hosted-mode tests cover
-the fixed corpus, exact-origin CORS, signed-request expiry, nonce replay
-rejection, empty-body contract, concurrency, rate limiting, health response,
-and Render configuration.
-
-## Architecture
-
-- `server.mjs` keeps local and hosted exposure rules separate.
-- `lib/samples.mjs` is the single source of truth for the three permitted PDFs.
-- `lib/converter.mjs` runs the packaged OpenDataLoader PDF JAR with a hard
-  deadline and one engine thread, then deletes its temporary output.
-- `lib/request-auth.mjs` verifies the hosted request signature and one-time
-  nonce.
-- `public/` contains the dependency-free localhost interface and generated
-  fixtures.
-- `presentation/` is the separate owner-only Sites portfolio and private
-  integration candidate.
-- `Dockerfile` contains only the hosted server, allowlist, samples, production
-  dependencies, Node, and Java.
-- `render.yaml` describes one manually deployed free-tier Docker web service.
-
-OpenDataLoader PDF 2.5.1 runs in ordinary local-processing mode. Its packaged
-Node integration starts a Java process; the bounded runner here invokes that
-same packaged JAR directly so it can enforce a hard process timeout.
-
-## Sites presentation and private integration candidate
-
-`presentation/` begins with no selected document and no conversion result. A
-visitor chooses one of the three fixtures, inspects that source, and explicitly
-requests a fresh conversion. Only a successful same-origin server response
-reveals Markdown, a run receipt, and the copy action. A failed request exposes
-no captured or fallback result. The Sites surface adds no upload control, Java
-process, visitor document handling, persistence, database, storage, or
-private-network link.
-
-## Render deployment candidate
-
-The hosted image is API-only. It binds to `0.0.0.0:$PORT` because Render routes
-web-service traffic to that listener, but it exposes only:
-
-- `GET /healthz`, returning an empty `204` response; and
-- `POST /api/convert/<sample-id>` for one of the three server-side allowlisted
-  sample IDs.
-
-Hosted mode does not serve the local UI, sample manifest, PDFs, previews, or any
-arbitrary file path. The conversion request accepts no body. There is still no
-upload, visitor document, remote URL, OCR service, database, persistent disk,
-or account system.
-
-### Required Render environment variables
-
-The repository names these variables but commits no values:
-
-- `PAPERPLAIN_ALLOWED_ORIGIN` — the exact HTTPS origin of the private Sites
-  presentation, with no path or trailing slash.
-- `PAPERPLAIN_REQUEST_SECRET` — exactly 64 lowercase hexadecimal characters
-  encoding 32 random bytes, stored as a Render secret and shared verbatim only
-  with a future trusted server-side signer. Do not add quotes, spaces, or line
-  breaks.
-
-`PORT` is supplied by Render. The image selects hosted mode itself. The service
-refuses to start if either required value is missing or malformed.
-
-### Signed request contract
-
-Every hosted conversion request must provide:
-
-- `Origin`
-- `X-Paperplain-Timestamp` — current Unix time in seconds
-- `X-Paperplain-Nonce` — 22 to 64 URL-safe random characters
-- `X-Paperplain-Signature` — `v1=` followed by a lowercase HMAC-SHA256 digest
-
-The HMAC input is the following newline-delimited canonical string:
-
-```text
-v1
-<timestamp>
-<nonce>
-POST
-/api/convert/<sample-id>
-<exact allowed origin>
-<SHA-256 of the empty request body>
-```
-
-The signing helper validates that exact 64-character lowercase hexadecimal
-format, decodes it to the original 32-byte key, and then computes the HMAC.
-
-The backend accepts a timestamp for 60 seconds, allows at most 10 seconds of
-future clock skew, and remembers accepted nonces in memory for the window. A
-nonce cannot be used twice. This design assumes the free tier's single service
-instance; scaling to multiple instances would require a separately designed
-shared replay store.
-
-The exact origin check is defense in depth, not authentication: non-browser
-clients can forge an `Origin` header. The HMAC is the authorization boundary.
-
-### Important Sites boundary
-
-The signing secret must never appear in browser JavaScript, a public bundle, a
-URL, or client storage. The candidate Sites worker therefore accepts only a
-same-origin `POST /api/convert/<sample-id>` from a platform-authenticated user,
-checks the three-item allowlist and empty body, wakes the Render health endpoint,
-then creates the short-lived HMAC request server-side. The browser receives only
-the sanitized conversion result.
-
-This authorization relies on the Sites access policy remaining owner-only in
-addition to the route's authenticated-user-header check. If access becomes
-shared or public, this integration must not be deployed without a new
-authorization design. The current live Sites version has not been replaced by
-this candidate.
-
-### Resource and data controls
-
-- One conversion may run at a time; additional concurrent work receives `429`.
-- At most six authenticated conversions are admitted per minute per instance.
-- The Java process receives one engine thread and a 60-second hard deadline.
-- The container caps Node's old-space heap and the Java heap for Render's
-  512 MB free instance.
-- Conversion files are created only under the ephemeral temporary directory and
-  removed after each request.
-- The container runs as the unprivileged `node` user and includes no local UI,
-  build tools, presentation, tests, or development corpus generator.
-- Health and hosted error responses expose no Java version, filesystem path,
-  secret state, stack trace, or converter diagnostic.
-
-Render documents that free web services have 512 MB RAM and 0.1 CPU, spin down
-after 15 idle minutes, and use an ephemeral filesystem. The next request after
-idle can take about a minute to wake. This candidate treats those properties as
-demo constraints, not performance claims. See Render's official
-[free-tier](https://render.com/docs/free),
-[Docker](https://render.com/docs/docker),
-[web-service](https://render.com/docs/web-services), and
-[health-check](https://render.com/docs/health-checks) documentation.
-
-## Render dashboard handoff
-
-Nothing in this section has been performed by the repository preparation.
-
-1. Create or sign in to the intended Render account yourself.
-2. Choose **New → Blueprint**, connect the public `kasselvania/paperplain`
-   repository, and select the root `render.yaml`.
-3. Confirm the Blueprint contains exactly one free Docker web service named
-   `paperplain-converter`, with auto-deploy disabled, `/healthz` as its health
-   check, and no disk, database, custom domain, or additional service.
-4. Enter `PAPERPLAIN_ALLOWED_ORIGIN` as the exact private Sites origin.
-5. On this Mac, generate 32 random bytes as exactly 64 lowercase hexadecimal
-   characters and copy them without a trailing line break:
-
-   ```bash
-   openssl rand -hex 32 | tr -d '\n' | pbcopy
-   ```
-
-   Paste the clipboard contents verbatim into `PAPERPLAIN_REQUEST_SECRET` and
-   retain the same value in an appropriate secret manager for a future trusted
-   signer. The pasted value must match `^[0-9a-f]{64}$`: no quotes, spaces, or
-   line breaks. Do not put it in GitHub or the Sites client bundle.
-6. Choose the desired region, review the public `onrender.com` exposure, then
-   explicitly apply the Blueprint when ready. Applying it creates and deploys a
-   live public backend.
-7. After deployment, confirm `/healthz` returns `204` and an unsigned conversion
-   request returns `401`. A successful conversion should wait until the private
-   Sites variables below are configured and this candidate is separately
-   approved for deployment.
-
-Render supports secret placeholders with `sync: false`; its official
-[environment-variable documentation](https://render.com/docs/configure-environment-variables)
-describes how the dashboard collects those values during initial Blueprint
-creation.
-
-## Private Sites dashboard handoff
-
-The source is prepared, but no Sites environment value, saved version,
-deployment, or access policy has been changed.
-
-Before any Sites version is saved or deployed, the owner must manually configure
-these production runtime values in the existing private Paperplain Sites project:
-
-- `PAPERPLAIN_RENDER_ORIGIN` — the exact HTTPS origin shown by the Render
-  service, with no path or trailing slash. It must be a `*.onrender.com` origin.
-- `PAPERPLAIN_REQUEST_SECRET` — the exact same 64-character lowercase
-  hexadecimal value already stored in Render. Mark it as a Sites secret. Do not
-  generate a different value, add quotes or whitespace, expose it to the
-  browser, commit it, or send it to Codex.
-
-Keep the Sites access policy at custom owner-only: one allowed account, no
-workspace or tenant groups, and no external visitors. After manual
-configuration, the separately authorized release procedure is:
-
-1. rebuild and test this exact source;
-2. confirm client assets contain neither server variable name nor value;
-3. save one Sites version without changing access;
-4. deploy only with a fresh owner-only access readback; and
-5. verify a signed-out request is denied, each of the three fixed samples can
-   return a fresh receipt, and no browser request goes directly to Render.
+The presentation suite is limited to the contract's high-value boundaries:
+empty initial state and clean client assets, anonymous HMAC interoperability,
+and refusal of off-contract requests. A green build is not proof of hosted
+operation; that claim requires a real Sites-to-Render conversion.
 
 ## Regenerate the fictional corpus
 
-The included PDFs and preview images are generated entirely from local vector
-shapes and fictional copy:
+The included PDFs and previews are generated from local vector shapes and
+fictional copy:
 
 ```bash
 python3 -m pip install -r requirements-dev.txt
@@ -272,5 +149,5 @@ Preview rendering also requires Poppler's `pdftoppm` command.
 ## Paperplain license status
 
 No software license has been selected for Paperplain. The Apache-2.0 license
-identified by the pinned dependency applies to OpenDataLoader PDF; it does not
-automatically license the independent Paperplain source.
+identified above applies to OpenDataLoader PDF; it does not automatically
+license the independent Paperplain source.
