@@ -115,10 +115,13 @@ export default function Home() {
     <div className="site-shell" data-tone={selected?.tone ?? "moss"} id="top">
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="Paperplain home">
-          <span className="wordmark-mark" aria-hidden="true">
+          <span className="wordmark-stamp" aria-hidden="true">
             P
           </span>
-          <span>Paperplain</span>
+          <span className="wordmark-name">
+            Paperplain
+            <small>Fixed-sample demonstration</small>
+          </span>
         </a>
         <div className="demo-status">
           <span className="status-dot" aria-hidden="true" />
@@ -127,26 +130,29 @@ export default function Home() {
       </header>
 
       <main>
+        {/* ---------------- hero ---------------- */}
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <p className="eyebrow">PDF → MARKDOWN / FIXED SAMPLE DEMO</p>
+            <p className="eyebrow">PDF → MARKDOWN / FIXED-SAMPLE DEMO</p>
             <h1 id="hero-title">
-              Choose the source.
-              <span>Reveal the structure.</span>
+              <span className="hero-paper">Paper in.</span>
+              <span className="hero-plain">plain out.</span>
             </h1>
             <p className="hero-intro">
-              Select one fictional PDF, run the real server-side converter, then
-              inspect and copy only the Markdown that comes back from that run.
+              Pick one specimen from the collection below. The server converts
+              that exact document — nothing else — and the Markdown appears only
+              after the real request returns, with a receipt you can inspect and
+              copy.
             </p>
-            <a className="primary-link" href="#sample-explorer">
-              Start with a sample
+            <a className="primary-link" href="#collection">
+              Open the collection
               <span aria-hidden="true">↓</span>
             </a>
           </div>
 
-          <aside className="hero-proof" aria-label="Demo contract">
-            <p className="proof-label">THE WHOLE DEMO</p>
-            <ol className="hero-flow">
+          <aside className="proof-card" aria-label="Demo contract">
+            <p className="proof-heading">THE WHOLE DEMO</p>
+            <ol className="proof-ledger">
               <li data-active={workflowStep === 1}>
                 <span>01</span>
                 <strong>Choose</strong>
@@ -155,60 +161,69 @@ export default function Home() {
               <li data-active={workflowStep === 2}>
                 <span>02</span>
                 <strong>Convert</strong>
-                <p>Run one bounded server request.</p>
+                <p>One bounded server request.</p>
               </li>
               <li data-active={workflowStep === 3}>
                 <span>03</span>
                 <strong>Use</strong>
-                <p>Inspect the receipt and copy Markdown.</p>
+                <p>Inspect the receipt, copy Markdown.</p>
               </li>
             </ol>
-            <p className="proof-boundary">
-              No result is present before a successful conversion.
+            <p className="proof-fineprint">
+              No result exists in this page before a successful conversion.
             </p>
           </aside>
         </section>
 
-        <section
-          className="explorer"
-          id="sample-explorer"
-          aria-labelledby="explorer-title"
-        >
-          <div className="section-heading explorer-heading">
+        {/* ---------------- seam between paper world and plain world ---------------- */}
+        <div className="seam" aria-hidden="true">
+          <span className="seam-edge seam-paper">PAPER</span>
+          <span className="seam-beam" />
+          <span className="seam-edge seam-plain">PLAIN</span>
+        </div>
+
+        {/* ---------------- specimen drawer ---------------- */}
+        <section className="drawer" id="collection" aria-labelledby="drawer-title">
+          <div className="section-head drawer-head">
             <div>
-              <p className="eyebrow">01 / CHOOSE A SOURCE</p>
-              <h2 id="explorer-title">Three fixtures. No preloaded answer.</h2>
+              <p className="eyebrow">01 / THE COLLECTION</p>
+              <h2 id="drawer-title">Three fixtures. No preloaded answer.</h2>
             </div>
             <p className="section-note">
-              Each card represents one allowlisted fictional PDF. Selecting a card
-              reveals only its source preview and the action needed to convert it.
+              Each plate is one allowlisted fictional PDF from the fixed corpus.
+              Selecting it reveals its source preview and the single action this
+              demo permits.
             </p>
           </div>
 
-          <div className="sample-picker" aria-label="Fictional sample PDFs">
+          <div className="specimen-row" aria-label="Fictional sample PDFs">
             {sampleData.map((sample, index) => {
               const isSelected = sample.id === selected?.id;
               return (
                 <button
-                  className="sample-button"
+                  className="specimen-plate"
                   data-selected={isSelected}
+                  data-tone={sample.tone}
                   key={sample.id}
                   type="button"
                   aria-pressed={isSelected}
-                  aria-controls="conversion-workspace"
+                  aria-controls="conversion-bench"
                   disabled={runState === "running"}
                   onClick={() => chooseSample(sample.id)}
                 >
-                  <span className="sample-button-index">
-                    {String(index + 1).padStart(2, "0")}
+                  <span className="plate-tone" aria-hidden="true" />
+                  <span className="plate-top">
+                    <span className="plate-index">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="plate-mark" aria-hidden="true">
+                      {isSelected ? "—" : "+"}
+                    </span>
                   </span>
-                  <span className="sample-button-copy">
+                  <span className="plate-copy">
                     <small>{sample.eyebrow}</small>
                     <strong>{sample.title}</strong>
                     <span>{sample.layout}</span>
-                  </span>
-                  <span className="sample-button-mark" aria-hidden="true">
-                    {isSelected ? "—" : "+"}
                   </span>
                 </button>
               );
@@ -216,8 +231,10 @@ export default function Home() {
           </div>
 
           {!selected ? (
-            <div className="workspace-empty" id="conversion-workspace">
-              <span aria-hidden="true">01</span>
+            <div className="bench-empty" id="conversion-bench">
+              <span className="bench-empty-glyph" aria-hidden="true">
+                ¶
+              </span>
               <div>
                 <p>WAITING FOR A SOURCE</p>
                 <h3>Choose a fixture to begin.</h3>
@@ -227,17 +244,18 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="sample-workspace" id="conversion-workspace">
-              <article className="source-panel">
-                <header className="panel-header">
+            <div className="bench" id="conversion-bench">
+              {/* -------- source under glass -------- */}
+              <article className="source-plate">
+                <header className="panel-head source-panel-head">
                   <div>
-                    <span className="panel-number">01</span>
+                    <span className="panel-no">01</span>
                     <p>Selected source PDF</p>
                   </div>
                   <span className="panel-meta">{selected.layout}</span>
                 </header>
-                <div className="source-frame" aria-busy={runState === "running"}>
-                  <div className="source-document" data-sample={selected.id}>
+                <div className="glass-frame" aria-busy={runState === "running"}>
+                  <div className="source-doc" data-sample={selected.id}>
                     <img
                       src={selected.previewUrl}
                       alt={`Rendered first page of ${selected.title}`}
@@ -251,7 +269,7 @@ export default function Home() {
                     ) : null}
                   </div>
                 </div>
-                <div className="source-caption">
+                <footer className="source-caption">
                   <div>
                     <p>{selected.eyebrow}</p>
                     <h3>{selected.title}</h3>
@@ -261,17 +279,18 @@ export default function Home() {
                     Inspect source PDF
                     <span aria-hidden="true">↗</span>
                   </a>
-                </div>
+                </footer>
               </article>
 
+              {/* -------- the ledger -------- */}
               <article
-                className="markdown-panel"
+                className="ledger"
                 data-state={runState}
                 aria-busy={runState === "running"}
               >
-                <header className="panel-header markdown-header">
+                <header className="panel-head ledger-head">
                   <div>
-                    <span className="panel-number">02</span>
+                    <span className="panel-no">02</span>
                     <p>Conversion result</p>
                   </div>
                   {liveResult ? (
@@ -283,22 +302,27 @@ export default function Home() {
 
                 {liveResult ? (
                   <>
-                    <div className="conversion-success" role="status">
-                      <span className="verified-mark" aria-hidden="true">
+                    <div className="ledger-banner" role="status">
+                      <span className="banner-mark" aria-hidden="true">
                         ✓
                       </span>
                       <div>
-                        <strong>Live conversion complete</strong>
+                        <strong>Fresh run complete</strong>
                         <p>{runMessage}</p>
                       </div>
                     </div>
                     <pre className="markdown-output">
                       <code>{liveResult.markdown}</code>
                     </pre>
-                    <div className="run-receipt" aria-label="Live conversion receipt">
-                      <div className="receipt-heading">
+                    <div className="receipt" aria-label="Run receipt">
+                      <span className="fresh-stamp" aria-hidden="true">
+                        FRESH RUN ✓
+                      </span>
+                      <div className="receipt-rule">
                         <p>SERVER RUN RECEIPT</p>
-                        <span>{liveResult.run.elapsedMs.toLocaleString()} ms</span>
+                        <span>
+                          {liveResult.run.elapsedMs.toLocaleString()} ms
+                        </span>
                       </div>
                       <dl>
                         <div>
@@ -329,10 +353,10 @@ export default function Home() {
                     </div>
                   </>
                 ) : (
-                  <div className="conversion-gate" data-state={runState}>
-                    <div className="gate-index" aria-hidden="true">
+                  <div className="gate" data-state={runState}>
+                    <span className="gate-no" aria-hidden="true">
                       02
-                    </div>
+                    </span>
                     <p className="gate-label">
                       {runState === "running"
                         ? "REQUEST SENT"
@@ -378,20 +402,25 @@ export default function Home() {
           )}
         </section>
 
-        <section className="truth-section" aria-labelledby="truth-title">
-          <div className="truth-lead">
+        {/* ---------------- provenance ---------------- */}
+        <section className="provenance" aria-labelledby="provenance-title">
+          <div className="prov-lead">
             <p className="eyebrow">THE BOUNDED PRODUCT</p>
-            <h2 id="truth-title">One real request. One inspectable outcome.</h2>
+            <h2 id="provenance-title">
+              One real request.
+              <br />
+              One inspectable outcome.
+            </h2>
             <p>
               The browser sends only the selected sample ID to the same-origin
-              public Sites route. That route checks the fixed allowlist, signs one
-              short-lived request, and calls the managed converter. The browser
-              receives only the returned Markdown and run receipt.
+              route. That route checks the fixed allowlist, signs one short-lived
+              request, and calls the managed converter. What returns is the
+              Markdown and a receipt — nothing stored, nothing invented.
             </p>
           </div>
-          <div className="truth-columns">
+          <div className="prov-columns">
             <div>
-              <h3>What is here</h3>
+              <h3>In the archive</h3>
               <ul>
                 <li>Three fictional, generated PDF fixtures</li>
                 <li>One fixed-corpus server conversion route</li>
@@ -400,7 +429,7 @@ export default function Home() {
               </ul>
             </div>
             <div>
-              <h3>What is not here</h3>
+              <h3>Never in the archive</h3>
               <ul>
                 <li>No uploads or visitor documents</li>
                 <li>No preloaded or fallback conversion result</li>
@@ -428,7 +457,7 @@ export default function Home() {
 
       <footer className="site-footer">
         <div className="footer-brand">
-          <span className="wordmark-mark" aria-hidden="true">
+          <span className="wordmark-stamp" aria-hidden="true">
             P
           </span>
           <div>
