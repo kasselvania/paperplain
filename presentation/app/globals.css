@@ -231,7 +231,7 @@ button {
 }
 
 .hero-plain {
-  margin-top: 0.06em;
+  margin-top: clamp(0.7rem, 1.6vw, 1.5rem);
   color: var(--tone);
   font-family: var(--mono);
   font-size: clamp(2.05rem, 3.9vw, 4.1rem);
