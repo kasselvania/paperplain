@@ -5,7 +5,7 @@ product boundary is three generated fictional PDFs, one server-side transform,
 and fresh inspectable Markdown. There is no upload route and no path for visitor
 documents.
 
-Public presentation: [paperplain.peter-kassel.chatgpt.site](https://paperplain.peter-kassel.chatgpt.site/)
+Live demonstration: [paperplain.peterkassel.com](https://paperplain.peterkassel.com/)
 
 Paperplain does **not** implement the PDF conversion engine. It uses
 [`@opendataloader/pdf`](https://www.npmjs.com/package/@opendataloader/pdf) from
